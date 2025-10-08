@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://q4eup3yfhoqf"]
+
+[ext_resource type="Script" path="res://winterfell_map.gd" id="1_sptg1"]
+
+[node name="winterfell map" type="Node2D"]
+texture_filter = 2
+script = ExtResource("1_sptg1")
+
+[node name="Node" type="Node" parent="."]
