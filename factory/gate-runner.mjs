@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const VALID_STATES = new Set(['NOT_STARTED','IN_PROGRESS','PASS','BLOCKED','WAIVED','FAILED']);
 const VALID_CONTROLS = new Set(['AUTO_ALLOWED','HUMAN_REVIEW','HUMAN_ACTION']);
-const EXPECTED_STAGE_IDS = Array.from({length: 17}, (_, i) => `S${String(i).padStart(2, '0')}`);
+const EXPECTED_STAGE_IDS = Array.from({length: 18}, (_, i) => `S${String(i).padStart(2, '0')}`);
 
 function die(message, code = 1) {
   console.error(`FACTORY_ERROR: ${message}`);
@@ -54,7 +54,8 @@ function summarize(manifest) {
   const firstOpen = stages.find(s => s.blocking && !['PASS','WAIVED'].includes(s.state));
   const rc = stages.find(s => s.id === 'S13');
   const release = stages.find(s => s.id === 'S14');
-  const live = stages.find(s => s.id === 'S16');
+  const postDeploy = stages.find(s => s.id === 'S16');
+  const learning = stages.find(s => s.id === 'S17');
 
   return {
     counts,
@@ -64,7 +65,8 @@ function summarize(manifest) {
     firstOpen,
     rcVerified: rc?.state === 'PASS',
     humanReleaseApproved: release?.state === 'PASS',
-    live: live?.state === 'IN_PROGRESS' || manifest.project?.status === 'LIVE'
+    postDeployVerified: postDeploy?.state === 'PASS',
+    liveLearning: learning?.state === 'IN_PROGRESS' || learning?.state === 'PASS' || manifest.project?.status === 'LIVE'
   };
 }
 
@@ -78,9 +80,7 @@ function printTable(manifest, summary) {
   console.log('');
   console.log('ID   STATE         CONTROL        STAGE');
   console.log('----  ------------  -------------  ----------------------------------------');
-  for (const s of manifest.stages) {
-    console.log(`${s.id.padEnd(4)}  ${s.state.padEnd(12)}  ${s.control.padEnd(13)}  ${s.name}`);
-  }
+  for (const s of manifest.stages) console.log(`${s.id.padEnd(4)}  ${s.state.padEnd(12)}  ${s.control.padEnd(13)}  ${s.name}`);
   console.log('');
   console.log(`Blocking gates open: ${summary.blockingOpen.length}`);
   if (summary.firstOpen) console.log(`Current first blocking gate: ${summary.firstOpen.id} ${summary.firstOpen.name}`);
@@ -88,7 +88,8 @@ function printTable(manifest, summary) {
   console.log(`Auto-owned open gates: ${summary.auto.length}`);
   console.log(`RC_VERIFIED: ${summary.rcVerified ? 'YES' : 'NO'}`);
   console.log(`HUMAN_RELEASE_APPROVED: ${summary.humanReleaseApproved ? 'YES' : 'NO'}`);
-  console.log(`LIVE: ${summary.live ? 'YES' : 'NO'}`);
+  console.log(`POST_DEPLOY_VERIFIED: ${summary.postDeployVerified ? 'YES' : 'NO'}`);
+  console.log(`LIVE_LEARNING: ${summary.liveLearning ? 'YES' : 'NO'}`);
 
   if (summary.human.length) {
     console.log('\nHUMAN QUEUE');
@@ -112,7 +113,8 @@ function asJson(manifest, summary) {
     release: {
       rc_verified: summary.rcVerified,
       human_release_approved: summary.humanReleaseApproved,
-      live: summary.live
+      post_deploy_verified: summary.postDeployVerified,
+      live_learning: summary.liveLearning
     }
   };
 }
