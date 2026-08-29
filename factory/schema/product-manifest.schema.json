@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "product-engine://schemas/product-manifest-v0.1",
+  "title": "Product Engine Universal Product Manifest v0.1",
+  "type": "object",
+  "required": ["schema_version", "project", "commercial", "provenance", "platforms", "stages"],
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "project": {
+      "type": "object",
+      "required": ["id", "title", "medium", "status", "owner"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "medium": { "enum": ["windows_tool", "microgame", "book", "coloring_activity_book", "video", "short_video", "social_post", "landing_page", "other"] },
+        "status": { "enum": ["RAW", "RESEARCHING", "VALIDATING", "BUILDING", "QA", "RC", "COMMERCIAL_READY", "LIVE", "HOLD", "KILLED"] },
+        "owner": { "type": "string", "minLength": 1 },
+        "source_project": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "commercial": {
+      "type": "object",
+      "required": ["price_hypothesis_usd", "price_approved", "revenue_status"],
+      "properties": {
+        "price_hypothesis_usd": { "type": ["number", "null"], "minimum": 0 },
+        "price_approved": { "type": "boolean" },
+        "revenue_status": { "enum": ["NONE", "TEST_ONLY", "VERIFIED_REVENUE"] },
+        "pricing_basis": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["classification", "rights_status"],
+      "properties": {
+        "classification": { "enum": ["HUMAN_CREATED", "AI_ASSISTED", "AI_GENERATED", "MIXED"] },
+        "rights_status": { "enum": ["PASS", "BLOCKED", "IN_PROGRESS", "UNKNOWN"] },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "policy_checked_on", "release_refresh_required", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "role": { "enum": ["PRIMARY", "SECONDARY", "MARKETING", "DERIVATIVE"] },
+          "status": { "enum": ["PLANNED", "READY", "BLOCKED", "LIVE"] },
+          "policy_checked_on": { "type": "string", "format": "date" },
+          "release_refresh_required": { "type": "boolean" },
+          "notes": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 17,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "state", "control", "blocking", "evidence", "blockers"],
+        "properties": {
+          "id": { "pattern": "^S(0[0-9]|1[0-6])$" },
+          "name": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["NOT_STARTED", "IN_PROGRESS", "PASS", "BLOCKED", "WAIVED", "FAILED"] },
+          "control": { "enum": ["AUTO_ALLOWED", "HUMAN_REVIEW", "HUMAN_ACTION"] },
+          "blocking": { "type": "boolean" },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "blockers": { "type": "array", "items": { "type": "string" } },
+          "next_action": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
