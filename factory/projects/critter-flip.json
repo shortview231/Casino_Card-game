@@ -1,0 +1,238 @@
+{
+  "schema_version": "0.1",
+  "project": {
+    "id": "MICRO-CRITTER-FLIP",
+    "title": "Critter Flip: Pocket Collection",
+    "medium": "microgame",
+    "status": "BUILDING",
+    "owner": "Product Engine",
+    "source_project": null
+  },
+  "commercial": {
+    "price_hypothesis_usd": 2.99,
+    "price_approved": false,
+    "revenue_status": "NONE",
+    "pricing_basis": [
+      "Current itch low-price commercial lane supports small paid games.",
+      "Marketplace fixed payment fees make $2.99 more efficient than $0.99-$1.99.",
+      "Final price remains HUMAN_REVIEW/HUMAN_ACTION before release."
+    ]
+  },
+  "provenance": {
+    "classification": "MIXED",
+    "rights_status": "IN_PROGRESS",
+    "notes": [
+      "Game concept, product direction and approval are human-directed.",
+      "Code and production assets may use AI assistance/generation and must be registered truthfully.",
+      "Commercial release requires original or commercially licensed characters, graphics, audio and fonts.",
+      "No third-party character IP is authorized."
+    ]
+  },
+  "platforms": [
+    {
+      "id": "itch.io",
+      "role": "PRIMARY",
+      "status": "PLANNED",
+      "policy_checked_on": "2026-08-29",
+      "release_refresh_required": true,
+      "notes": [
+        "Browser HTML5 path is a discovery surface.",
+        "Paid/download ownership path must be explicitly selected and verified before release.",
+        "Final policy/fee check must be refreshed within the factory release window."
+      ]
+    },
+    {
+      "id": "youtube",
+      "role": "MARKETING",
+      "status": "PLANNED",
+      "policy_checked_on": "2026-08-29",
+      "release_refresh_required": true,
+      "notes": [
+        "Build-story video is a derivative marketing asset, not required for game RC.",
+        "Originality and synthetic-content disclosures are evaluated under the YouTube adapter."
+      ]
+    },
+    {
+      "id": "kdp",
+      "role": "DERIVATIVE",
+      "status": "PLANNED",
+      "policy_checked_on": "2026-08-29",
+      "release_refresh_required": true,
+      "notes": [
+        "Potential Critter coloring/activity book is a separate governed derivative and cannot inherit the game release stamp."
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "S00",
+      "name": "Discovery Intake",
+      "state": "PASS",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": ["Critter Flip concept selected as first new Microgame Engine reference product."],
+      "blockers": [],
+      "next_action": null
+    },
+    {
+      "id": "S01",
+      "name": "Hostile Market / Legal / Distribution Research",
+      "state": "PASS",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": ["Trend Radar Snapshot 001 captured itch Top Sellers, New & Popular and newest-game seed cohorts.", "Third-party character IP rejected; original Critter IP required."],
+      "blockers": [],
+      "next_action": null
+    },
+    {
+      "id": "S02",
+      "name": "Commercial / Attention Hypothesis",
+      "state": "PASS",
+      "control": "HUMAN_REVIEW",
+      "blocking": true,
+      "evidence": ["Current hypothesis: browser-first discovery, collectible-memory hook, $2.99 paid test lane."],
+      "blockers": [],
+      "next_action": "Human may revise price/positioning before commercial release."
+    },
+    {
+      "id": "S03",
+      "name": "Rights / Provenance",
+      "state": "IN_PROGRESS",
+      "control": "HUMAN_REVIEW",
+      "blocking": true,
+      "evidence": ["Original-IP-only rule documented."],
+      "blockers": ["Final shipped art/audio/font asset register does not yet exist."],
+      "next_action": "Register every final asset and its origin/license before RC."
+    },
+    {
+      "id": "S04",
+      "name": "Specification Lock",
+      "state": "PASS",
+      "control": "HUMAN_REVIEW",
+      "blocking": true,
+      "evidence": ["Core loop, shared GameModule contract, deterministic RNG, local Critter Book and initial modes are documented."],
+      "blockers": [],
+      "next_action": null
+    },
+    {
+      "id": "S05",
+      "name": "Story Capture Plan",
+      "state": "PASS",
+      "control": "AUTO_ALLOWED",
+      "blocking": false,
+      "evidence": ["Product-to-Content Flywheel requires capture of research, decisions, failures, testing, accessibility, final build and launch result."],
+      "blockers": [],
+      "next_action": "Capture real milestones during remaining work."
+    },
+    {
+      "id": "S06",
+      "name": "Pricing / Unit Economics",
+      "state": "IN_PROGRESS",
+      "control": "HUMAN_REVIEW",
+      "blocking": true,
+      "evidence": ["$2.99 is current test hypothesis based on marketplace economics and Trend Radar."],
+      "blockers": ["Final live price not human-approved.", "Final itch channel/payment route not selected."],
+      "next_action": "Review $2.99 hypothesis and route before commercial-ready stamp."
+    },
+    {
+      "id": "S07",
+      "name": "Production",
+      "state": "IN_PROGRESS",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": ["Playable Critter Flip reference module exists on microgame-engine-v0.1-runtime."],
+      "blockers": ["Final content/art polish incomplete.", "Capture 11 shared-shell proof remains separate engine completion work."],
+      "next_action": "Finish bounded V1 content without expanding engine scope."
+    },
+    {
+      "id": "S08",
+      "name": "Automated Verification",
+      "state": "PASS",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": ["Factory Stamp run 33269449936 passed typecheck, unit/coverage, generative stress, production build, desktop/mobile E2E and automated accessibility.", "Verified artifact 9719646274 digest sha256:25a3420c1b24fdb984920be15685b914a2a1c4b5e4739dc69f0897c89f82da3e."],
+      "blockers": [],
+      "next_action": "Re-run after final content/lockfile changes."
+    },
+    {
+      "id": "S09",
+      "name": "Human QA",
+      "state": "BLOCKED",
+      "control": "HUMAN_ACTION",
+      "blocking": true,
+      "evidence": [],
+      "blockers": ["Full playability QA not completed.", "Keyboard-only full session not completed.", "200% zoom/scaling, screen-reader sanity and physical touch/device QA receipts missing."],
+      "next_action": "Human completes QA checklist and records PASS/FAIL findings."
+    },
+    {
+      "id": "S10",
+      "name": "Derivative Map",
+      "state": "IN_PROGRESS",
+      "control": "HUMAN_REVIEW",
+      "blocking": false,
+      "evidence": ["Planned derivatives include build video, Shorts/TikTok/social assets and potential Critter coloring/activity book."],
+      "blockers": [],
+      "next_action": "Score derivatives after final Critter IP/assets exist; do not auto-publish."
+    },
+    {
+      "id": "S11",
+      "name": "Platform Packaging",
+      "state": "NOT_STARTED",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": [],
+      "blockers": ["Final production build and store assets not yet locked."],
+      "next_action": "Prepare itch package/page copy/screenshots after production and QA are green."
+    },
+    {
+      "id": "S12",
+      "name": "Compliance Refresh",
+      "state": "NOT_STARTED",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": ["Planning policy baseline checked 2026-08-29."],
+      "blockers": ["Final release policy refresh must occur within 7 days of publication."],
+      "next_action": "Refresh itch policy/fees and applicable derivative-platform rules immediately before release."
+    },
+    {
+      "id": "S13",
+      "name": "Release Candidate Verification",
+      "state": "BLOCKED",
+      "control": "AUTO_ALLOWED",
+      "blocking": true,
+      "evidence": [],
+      "blockers": ["Rights/provenance, pricing, production, human QA, packaging and compliance gates are incomplete."],
+      "next_action": "Generate RC evidence bundle only after all blocking predecessor gates pass."
+    },
+    {
+      "id": "S14",
+      "name": "Human Release Approval",
+      "state": "BLOCKED",
+      "control": "HUMAN_ACTION",
+      "blocking": true,
+      "evidence": [],
+      "blockers": ["RC_VERIFIED not achieved.", "Final live price and public release not approved."],
+      "next_action": "Human approves or rejects exact release candidate, destination and price."
+    },
+    {
+      "id": "S15",
+      "name": "Deployment / Publication",
+      "state": "BLOCKED",
+      "control": "HUMAN_ACTION",
+      "blocking": true,
+      "evidence": ["Manual fail-closed itch deployment workflow exists."],
+      "blockers": ["Human release approval absent.", "No itch credential/project/channel configured."],
+      "next_action": "Deploy only after explicit release approval; then immediately verify live destination."
+    },
+    {
+      "id": "S16",
+      "name": "Live Learning",
+      "state": "NOT_STARTED",
+      "control": "AUTO_ALLOWED",
+      "blocking": false,
+      "evidence": [],
+      "blockers": ["Product is not live."],
+      "next_action": "After release, track views/plays/downloads/purchases/revenue/refunds/support and derivative attribution."
+    }
+  ]
+}
