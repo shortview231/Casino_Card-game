@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "example-game",
+  "title": "Example Game",
+  "short_title": "Example",
+  "version": "0.1.0",
+  "price_lane_usd": "1.99-2.99",
+  "age_notes": "family-friendly",
+  "supports": {
+    "mouse": true,
+    "keyboard": true,
+    "touch": true,
+    "controller": false
+  },
+  "features": {
+    "save_progress": true,
+    "local_multiplayer": false,
+    "ai_opponent": false,
+    "timed_mode": false
+  },
+  "accessibility": {
+    "scalable_ui": true,
+    "visible_focus": true,
+    "no_color_only_information": true,
+    "reduced_motion": true,
+    "separate_music_sfx_volume": true
+  },
+  "save_schema_version": 1,
+  "commercial": {
+    "original_or_licensed_assets_only": true,
+    "accounts_required": false,
+    "ads": false,
+    "online_service_required": false
+  }
+}
