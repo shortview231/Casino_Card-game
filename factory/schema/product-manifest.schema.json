@@ -58,12 +58,12 @@
     },
     "stages": {
       "type": "array",
-      "minItems": 17,
+      "minItems": 18,
       "items": {
         "type": "object",
         "required": ["id", "name", "state", "control", "blocking", "evidence", "blockers"],
         "properties": {
-          "id": { "pattern": "^S(0[0-9]|1[0-6])$" },
+          "id": { "pattern": "^S(0[0-9]|1[0-7])$" },
           "name": { "type": "string", "minLength": 1 },
           "state": { "enum": ["NOT_STARTED", "IN_PROGRESS", "PASS", "BLOCKED", "WAIVED", "FAILED"] },
           "control": { "enum": ["AUTO_ALLOWED", "HUMAN_REVIEW", "HUMAN_ACTION"] },
