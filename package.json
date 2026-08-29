@@ -12,7 +12,10 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "e2e": "playwright test",
-    "verify:core": "npm run typecheck && npm run test:coverage && npm run test:stress && npm run build"
+    "factory:status": "node factory/gate-runner.mjs factory/projects/critter-flip.json",
+    "factory:json": "node factory/gate-runner.mjs factory/projects/critter-flip.json --json",
+    "factory:validate": "node factory/gate-runner.mjs factory/projects/critter-flip.json --validate-only",
+    "verify:core": "npm run factory:validate && npm run typecheck && npm run test:coverage && npm run test:stress && npm run build"
   },
   "devDependencies": {
     "@axe-core/playwright": "latest",
