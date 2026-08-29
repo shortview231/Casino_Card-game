@@ -17,6 +17,7 @@
   "devDependencies": {
     "@axe-core/playwright": "latest",
     "@playwright/test": "latest",
+    "@types/node": "latest",
     "@vitest/coverage-v8": "latest",
     "fast-check": "latest",
     "typescript": "latest",
