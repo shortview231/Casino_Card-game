@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   core:
-    name: Typecheck, unit, stress, coverage, build
+    name: Factory manifest, typecheck, unit, stress, coverage, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -23,6 +23,8 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: npm install
+      - name: Validate Universal Factory manifest
+        run: npm run factory:validate
       - name: Typecheck
         run: npm run typecheck
       - name: Unit + coverage gate
