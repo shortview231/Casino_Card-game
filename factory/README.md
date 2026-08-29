@@ -49,7 +49,8 @@ A gate can therefore be `BLOCKED + HUMAN_ACTION`, `IN_PROGRESS + HUMAN_REVIEW`, 
 | S13 | Release Candidate Verification |
 | S14 | Human Release Approval |
 | S15 | Deployment / Publication |
-| S16 | Live Learning |
+| S16 | Post-Deploy Verification |
+| S17 | Live Learning |
 
 All product media use the same stage IDs. Medium-specific work belongs in evidence, blockers, platform adapters and production/test details rather than inventing a new lifecycle.
 
@@ -79,11 +80,12 @@ Normal CI uses only manifest validation. A legitimate human blocker is not a cod
 
 ## Fail-closed rules
 
-- Every required stage S00-S16 must exist exactly once.
+- Every required stage S00-S17 must exist exactly once.
 - PASS requires evidence.
 - BLOCKED requires a blocker.
 - Unknown state/control values invalidate the manifest.
 - RC and deployment authority are separate.
+- Deployment and post-deploy verification are separate.
 - A product can have green technical CI while still being commercially blocked.
 - Platform compliance must be refreshed before release when the adapter says it is required.
 - Derivative products receive their own manifests/release stamps; they do not inherit the source product's release approval.
