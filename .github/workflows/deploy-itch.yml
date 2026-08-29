@@ -1,0 +1,54 @@
+name: Deploy verified microgame to itch.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      itch_target:
+        description: 'itch.io target in user/game form'
+        required: true
+        type: string
+      channel:
+        description: 'butler channel, for example html5 or web-beta'
+        required: true
+        default: 'html5'
+        type: string
+      confirm:
+        description: 'Type DEPLOY to authorize this release run'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ inputs.confirm == 'DEPLOY' }}
+    runs-on: ubuntu-latest
+    environment: itch-production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Require itch credential
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: test -n "$BUTLER_API_KEY"
+      - name: Install dependencies
+        run: npm install
+      - name: Verify core
+        run: npm run verify:core
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify browser and accessibility
+        run: npm run e2e
+      - name: Fetch stable butler from itch.io broth
+        run: |
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d .butler
+          chmod +x .butler/butler
+          .butler/butler version
+      - name: Push verified build
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: .butler/butler push dist "${{ inputs.itch_target }}:${{ inputs.channel }}"
