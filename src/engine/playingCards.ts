@@ -14,6 +14,13 @@ const SUIT_SYMBOL: Readonly<Record<StandardSuit, string>> = {
   clubs: '♣',
 };
 
+const SYMBOL_SUIT: Readonly<Record<string, StandardSuit>> = {
+  '♠': 'spades',
+  '♥': 'hearts',
+  '♦': 'diamonds',
+  '♣': 'clubs',
+};
+
 const SUIT_LABEL: Readonly<Record<StandardSuit, string>> = {
   spades: 'spades',
   hearts: 'hearts',
@@ -125,4 +132,45 @@ export function renderPlayingCardBack(host: HTMLElement, label = 'Face-down card
   mark.textContent = 'C11';
   inset.append(mark);
   host.append(inset);
+}
+
+function parseCompactCard(text: string): PlayingCardVisual | null {
+  const match = /^(A|[2-9]|10|J|Q|K)([♠♥♦♣])$/.exec(text.trim());
+  if (!match) return null;
+  const rank = match[1];
+  const symbol = match[2];
+  if (!rank || !symbol) return null;
+  const suit = SYMBOL_SUIT[symbol];
+  if (!suit) return null;
+  return { rank, suit };
+}
+
+/**
+ * Upgrade the existing Microgame card markup to the coded deck. This keeps
+ * the deck renderer independent from Capture 11's rules/state code and lets
+ * other standard-card microgames opt in without copying art or CSS.
+ */
+export function upgradePlayingCards(root: ParentNode): void {
+  root.querySelectorAll<HTMLElement>('.playing-card:not(.lv-playing-card)').forEach((host) => {
+    const sourceText = host.textContent ?? '';
+    const visual = parseCompactCard(sourceText);
+    if (!visual) return;
+    const ariaLabel = host.getAttribute('aria-label');
+    renderPlayingCardFace(host, visual);
+    if (ariaLabel) host.setAttribute('aria-label', ariaLabel);
+  });
+
+  root.querySelectorAll<HTMLElement>('.card-back:not(.lv-playing-card)').forEach((host) => {
+    const ariaHidden = host.getAttribute('aria-hidden');
+    renderPlayingCardBack(host, 'CPU face-down card');
+    if (ariaHidden !== null) host.setAttribute('aria-hidden', ariaHidden);
+  });
+}
+
+/** Keep newly rendered hands/boards upgraded as the game replaces DOM nodes. */
+export function observePlayingCards(root: HTMLElement): () => void {
+  upgradePlayingCards(root);
+  const observer = new MutationObserver(() => upgradePlayingCards(root));
+  observer.observe(root, { childList: true, subtree: true });
+  return () => observer.disconnect();
 }
