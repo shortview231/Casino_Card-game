@@ -1,4 +1,4 @@
-.lv-playing-card {
+.lv-playing-card.lv-playing-card {
   --card-ink: #161616;
   --card-red: #b01224;
   --card-paper: #fffdf4;
@@ -110,7 +110,7 @@
 .lv-card-red .lv-court-ornament { color: #8a2032; }
 .lv-court-half.flipped { transform: rotate(180deg); }
 
-.lv-card-back {
+.lv-playing-card.lv-card-back {
   display: grid;
   place-items: center;
   color: #fff;
@@ -148,9 +148,7 @@
   letter-spacing: 0.05em;
 }
 
-.lv-card-back-mark::first-line { transform: rotate(-45deg); }
-
-button.lv-playing-card {
+button.lv-playing-card.lv-playing-card {
   padding: 0;
   min-height: 6.5rem;
   min-width: 4.65rem;
@@ -173,13 +171,13 @@ html[data-contrast='high'] .lv-playing-card:not(.lv-card-back) {
 html[data-contrast='high'] .lv-playing-card.lv-card-red { color: #a00000; }
 
 @media (max-width: 34rem) {
-  .lv-playing-card {
+  .lv-playing-card.lv-playing-card {
     width: 4rem;
     min-width: 4rem;
     height: 5.6rem;
   }
 
-  button.lv-playing-card {
+  button.lv-playing-card.lv-playing-card {
     min-width: 4rem;
     min-height: 5.6rem;
   }
