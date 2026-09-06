@@ -1,16 +1,25 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-test('title to game flow works with keyboard', async ({ page }) => {
+test('Capture 11 title to first move works with keyboard', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Critter Flip', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Capture 11', level: 1 })).toBeVisible();
 
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+  const play = page.getByRole('button', { name: 'Play' });
+  await play.focus();
   await page.keyboard.press('Enter');
 
-  await expect(page.getByRole('grid', { name: 'Critter matching board' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Hidden critter card' })).toHaveCount(12);
+  await expect(page.getByRole('region', { name: 'Capture 11 card table' })).toBeVisible();
+  await expect(page.locator('.hand-card')).toHaveCount(4);
+
+  const firstCard = page.locator('.hand-card').first();
+  await firstCard.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Trail card' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Trail card' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText(/CPU is thinking|CPU trails|CPU captures|CPU builds|CPU burns/)).toBeVisible();
 });
 
 test('preferences survive a reload', async ({ page }) => {
