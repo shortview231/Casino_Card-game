@@ -42,10 +42,10 @@ describe('Capture 11 scoring', () => {
   it('awards no most-cards points on a 26-26 split', () => {
     const ranks: Rank[] = ['3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K'];
     const p1 = Array.from({ length: 26 }, (_, index) =>
-      card(ranks[index % ranks.length], 'clubs', `p1-${index}`),
+      card(ranks[index % ranks.length]!, 'clubs', `p1-${index}`),
     );
     const p2 = Array.from({ length: 26 }, (_, index) =>
-      card(ranks[index % ranks.length], 'hearts', `p2-${index}`),
+      card(ranks[index % ranks.length]!, 'hearts', `p2-${index}`),
     );
 
     const result = scoreHand(p1, p2);
