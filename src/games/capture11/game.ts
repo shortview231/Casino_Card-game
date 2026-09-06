@@ -180,7 +180,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
   let board = [...state.board];
   let lastCapturer = state.lastCapturer;
   let lastAction = '';
-  let buildCounter = board.filter((item) => item.kind === 'build').length + state.handNumber * 100;
+  const newBuildId = `build-${state.handNumber}-${played.id}`;
 
   switch (move.type) {
     case 'trail': {
@@ -215,7 +215,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       board = board.filter((item) => item.kind !== 'loose' || !selectedIds.has(item.card.id));
       board.push({
         kind: 'build',
-        id: `build-${buildCounter++}`,
+        id: newBuildId,
         cards: [...selected.map((item) => item.card), played],
         target: move.target,
         mode: 'open',
@@ -232,7 +232,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       board = board.filter((item) => item !== selected);
       board.push({
         kind: 'build',
-        id: `build-${buildCounter++}`,
+        id: newBuildId,
         cards: [selected.card, played],
         target,
         mode: 'paired',
