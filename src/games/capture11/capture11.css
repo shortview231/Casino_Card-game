@@ -1,0 +1,49 @@
+.capture11 { display: grid; gap: 0.8rem; }
+.capture11-header { display:flex; justify-content:space-between; align-items:end; gap:1rem; flex-wrap:wrap; }
+.capture11-header h1 { margin:0; letter-spacing:0.04em; }
+.capture11-header p { margin:0.2rem 0 0; opacity:0.8; }
+.match-score { display:flex; gap:0.5rem; }
+.match-score span { border:2px inset ButtonBorder; padding:0.45rem 0.75rem; min-width:6.5rem; text-align:center; background:Canvas; color:CanvasText; }
+.table-meta { display:flex; flex-wrap:wrap; gap:0.45rem 1rem; padding:0.5rem 0.7rem; border:2px inset ButtonBorder; background:Canvas; color:CanvasText; }
+.last-action { margin:0; min-height:1.6em; padding:0.45rem 0.7rem; border-left:0.3rem solid currentColor; background:Canvas; color:CanvasText; }
+.card-table { display:grid; gap:1rem; padding:1rem; border:3px ridge #9aa39a; background:#0b5d32; color:#fff; min-height:30rem; }
+.player-area, .board-area { display:grid; gap:0.55rem; }
+.player-area h2, .board-area h2 { margin:0; font-size:1rem; }
+.cpu-hand, .human-hand, .board-grid { display:flex; flex-wrap:wrap; gap:0.55rem; align-items:flex-start; }
+.board-area { min-height:12rem; align-content:start; border-top:1px solid rgb(255 255 255 / 35%); border-bottom:1px solid rgb(255 255 255 / 35%); padding:0.8rem 0; }
+.playing-card, .card-back { width:4.3rem; min-width:4.3rem; height:6rem; border-radius:0.35rem; display:inline-grid; place-items:center; font-size:1.35rem; font-weight:800; }
+.playing-card { background:#f7f4e8; border:2px solid #202020; box-shadow:2px 2px 0 rgb(0 0 0 / 35%); }
+.playing-card.red-card { color:#b40018; }
+.playing-card.black-card { color:#111; }
+.playing-card.selected, .build-card.selected { outline:4px solid #ffd75a; outline-offset:2px; transform:translateY(-0.18rem); }
+.card-back { background:repeating-linear-gradient(45deg,#213c74,#213c74 6px,#d9e2ff 6px,#d9e2ff 8px); border:3px double #fff; color:#fff; }
+.build-card { min-width:9.5rem; min-height:6rem; display:grid; gap:0.2rem; align-content:center; border:3px ridge #dfdfdf; border-radius:0.35rem; background:#ece9d8; color:#111; }
+.build-card strong { font-size:1.05rem; }
+.build-card span { font-size:0.86rem; }
+.build-card small { font-size:0.7rem; }
+.build-card.paired { border-style:double; border-width:5px; }
+.action-panel { display:grid; gap:0.6rem; padding:0.75rem; border:2px outset ButtonBorder; background:Canvas; color:CanvasText; }
+.action-panel h2 { margin:0; font-size:1rem; }
+.action-panel p { margin:0; }
+.action-buttons { display:flex; flex-wrap:wrap; gap:0.55rem; }
+.primary-action { font-weight:800; }
+.quiet-action { opacity:0.9; }
+.rules-help { border:1px solid currentColor; padding:0.6rem 0.8rem; }
+.rules-help summary { cursor:pointer; font-weight:700; }
+.rules-help p { margin:0.55rem 0; }
+.capture11-score-screen { display:grid; gap:1rem; max-width:42rem; margin:0 auto; }
+.match-total { font-size:1.2rem; font-weight:700; }
+.score-breakdown { display:grid; border:2px inset ButtonBorder; }
+.score-row { display:grid; grid-template-columns:minmax(8rem,1fr) 5rem 5rem; gap:0.5rem; padding:0.45rem 0.65rem; border-bottom:1px solid currentColor; }
+.score-row:last-child { border-bottom:0; }
+.score-row strong { text-align:center; }
+.score-head { font-size:0.85rem; opacity:0.85; }
+html[data-contrast='high'] .card-table { background:#000; border-color:#fff; }
+html[data-contrast='high'] .playing-card { background:#fff; color:#000; }
+html[data-contrast='high'] .playing-card.red-card { color:#a60000; }
+@media (max-width:34rem) {
+  .card-table { padding:0.7rem; min-height:0; }
+  .playing-card, .card-back { width:3.65rem; min-width:3.65rem; height:5.1rem; }
+  .build-card { min-width:8.4rem; }
+  .score-row { grid-template-columns:minmax(6.5rem,1fr) 3.5rem 3.5rem; }
+}
