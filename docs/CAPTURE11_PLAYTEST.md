@@ -45,6 +45,7 @@ npm run dev -- --host 127.0.0.1
 - must still hold the declared target card after building
 - raising/burning an open build when the new target is still held
 - paired/fixed builds that cannot be raised
+- collision-safe unique IDs for builds throughout the hand
 - build capture by matching target
 - last capturer receives every remaining board/build card at hand end
 - hand scoring: Aces 1 each, 2♠ 1, most spades 1, most cards 2, 10♦ 3
