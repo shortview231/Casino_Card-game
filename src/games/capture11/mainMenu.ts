@@ -9,7 +9,9 @@ const HERO_CARDS: readonly PlayingCardVisual[] = [
   { rank: 'A', suit: 'clubs' },
 ];
 
-function text(tag: 'p' | 'h1' | 'h2' | 'h3' | 'span' | 'strong', value: string, className = ''): HTMLElement {
+type TextTag = 'p' | 'h1' | 'h2' | 'h3' | 'span' | 'strong' | 'blockquote';
+
+function text(tag: TextTag, value: string, className = ''): HTMLElement {
   const node = document.createElement(tag);
   node.textContent = value;
   if (className) node.className = className;
@@ -75,6 +77,7 @@ function makePanelShell(title: string, eyebrow: string): { shell: HTMLElement; b
   const panel = document.createElement('div');
   panel.className = 'c11-info-panel';
   const heading = text('h1', title);
+  heading.tabIndex = -1;
   panel.append(text('p', eyebrow, 'c11-info-eyebrow'), heading);
   const body = document.createElement('div');
   body.className = 'c11-info-body';
@@ -148,7 +151,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     sideCopy.append(
       text('p', 'A CLASSIC\nCARD GAME\nREIMAGINED', 'c11-sidecopy-top'),
       text('p', 'STRATEGY\nSKILL\nRISK\nBIG PLAYS', 'c11-sidecopy-mid'),
-      text('blockquote', '“One card can change everything.”' as never, 'c11-menu-quote') as HTMLElement,
+      text('blockquote', '“One card can change everything.”', 'c11-menu-quote'),
     );
 
     screen.append(rail, stage, sideCopy);
@@ -176,14 +179,12 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     buttons.append(infoButton('Play vs CPU', actions.play, true), infoButton('Back to Main Menu', showMain));
     body.append(buttons);
     root.replaceChildren(shell);
-    heading.focus?.();
+    heading.focus();
   };
 
   const showAccessibility = () => {
     const { shell, body, heading } = makePanelShell('Accessibility', 'BUILT INTO THE GAME');
-    body.append(
-      text('p', 'Capture 11 uses several independent cues so suit recognition never depends on color alone.'),
-    );
+    body.append(text('p', 'Capture 11 uses several independent cues so suit recognition never depends on color alone.'));
     const suitGrid = document.createElement('div');
     suitGrid.className = 'c11-access-suits';
     for (const [label, className] of [
@@ -192,8 +193,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
       ['D ♦ Diamonds', 'diamonds'],
       ['C ♣ Clubs', 'clubs'],
     ] as const) {
-      const suit = text('strong', label, `is-${className}`);
-      suitGrid.append(suit);
+      suitGrid.append(text('strong', label, `is-${className}`));
     }
     body.append(
       suitGrid,
@@ -204,7 +204,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     buttons.append(infoButton('Open Settings', actions.settings, true), infoButton('Back to Main Menu', showMain));
     body.append(buttons);
     root.replaceChildren(shell);
-    heading.focus?.();
+    heading.focus();
   };
 
   const showFeedback = () => {
@@ -221,14 +221,20 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
       'Playtest log if relevant:',
     ].join('\n');
     const copy = infoButton('Copy Feedback Template', () => {
-      void navigator.clipboard?.writeText(template).then(() => { copy.textContent = 'Template Copied'; }).catch(() => { copy.textContent = 'Copy unavailable'; });
+      if (!navigator.clipboard) {
+        copy.textContent = 'Copy unavailable';
+        return;
+      }
+      void navigator.clipboard.writeText(template)
+        .then(() => { copy.textContent = 'Template Copied'; })
+        .catch(() => { copy.textContent = 'Copy unavailable'; });
     }, true);
     const buttons = document.createElement('div');
     buttons.className = 'c11-info-actions';
     buttons.append(copy, infoButton('Back to Main Menu', showMain));
     body.append(buttons);
     root.replaceChildren(shell);
-    heading.focus?.();
+    heading.focus();
   };
 
   const showQuit = () => {
@@ -239,7 +245,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     buttons.append(infoButton('Return to Main Menu', showMain, true));
     body.append(buttons);
     root.replaceChildren(shell);
-    heading.focus?.();
+    heading.focus();
   };
 
   showMain();
