@@ -32,6 +32,9 @@ npm run dev -- --host 127.0.0.1
 
 - Human vs CPU match
 - standard 52-card deck
+- reusable coded playing-card faces and card backs
+- visual build renderer that shows the real cards contained in each build
+- open vs locked build presentation and current build controller
 - four cards to each player and four opening board cards
 - later four-card redeals with no new board cards
 - alternating dealer
@@ -54,18 +57,37 @@ npm run dev -- --host 127.0.0.1
 - end-of-hand score breakdown
 - keyboard/touch/mouse-compatible controls
 - text scale, high contrast and reduced-motion support inherited from Microgame Engine
+- reproducible playtest seed and move/state log
+- automatic 52-card conservation check after every recorded move
+
+## Playtest diagnostics
+
+Open the **Playtest** disclosure near the bottom of the game at any time.
+
+It shows:
+
+- the original match seed;
+- the current hand seed and hand number;
+- `52 cards OK` when every card exists exactly once across the deck, both hands, board/builds and captured piles;
+- a complete JSON playtest log containing the seed, every human/CPU move and the resulting state.
+
+Use **Copy playtest log** when reporting a problem. If clipboard access is unavailable, select the JSON from the visible log box and copy it manually.
+
+The match seed lets the same initial shuffle be reproduced. The recorded move sequence makes it possible to turn a gameplay bug into an automated regression test instead of relying on memory.
 
 ## Highest-value human tests
 
 1. Try `A + 4 -> build 5` while keeping another 5 in hand.
 2. Let the CPU/player raise an open 5 with a 3 while still holding an 8. Confirm the build becomes 8 and changes control.
 3. Create a same-value paired build, such as playing a 5 onto a board 5 while another 5 remains in hand. Confirm it is shown as locked.
-4. Capture a large build and verify every physical card in it moves into the captured-card count.
-5. Leave several cards on the final board. Confirm the player who made the final capture receives all of them before scoring.
-6. Watch for a 26–26 captured-card split. Confirm the Most Cards category awards 0 to both players.
-7. Play through multiple hands and confirm dealer rotates and the nondealer always acts first.
-8. Try to make a build without keeping the declared target in hand. The game should refuse to offer that move.
-9. Check any family-rule edge case where the UI refuses a move that should be legal. Record the exact hand card, board cards/build, and intended result.
+4. Grow a large build. Confirm every physical card remains visible in the build renderer and the card count is correct.
+5. Capture a large build and verify every physical card in it moves into the captured-card count.
+6. Leave several cards on the final board. Confirm the player who made the final capture receives all of them before scoring.
+7. Watch for a 26–26 captured-card split. Confirm the Most Cards category awards 0 to both players.
+8. Play through multiple hands and confirm dealer rotates and the nondealer always acts first.
+9. Try to make a build without keeping the declared target in hand. The game should refuse to offer that move.
+10. Keep an eye on the Playtest summary. `52 cards OK` should remain true throughout normal play.
+11. Check any family-rule edge case where the UI refuses a move that should be legal. Copy the playtest log and note what you intended to do.
 
 ## Known playtest boundary
 
