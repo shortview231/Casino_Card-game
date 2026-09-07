@@ -17,11 +17,46 @@
 .playing-card.black-card { color:#111; }
 .playing-card.selected, .build-card.selected { outline:4px solid #ffd75a; outline-offset:2px; transform:translateY(-0.18rem); }
 .card-back { background:repeating-linear-gradient(45deg,#213c74,#213c74 6px,#d9e2ff 6px,#d9e2ff 8px); border:3px double #fff; color:#fff; }
-.build-card { min-width:9.5rem; min-height:6rem; display:grid; gap:0.2rem; align-content:center; border:3px ridge #dfdfdf; border-radius:0.35rem; background:#ece9d8; color:#111; }
-.build-card strong { font-size:1.05rem; }
-.build-card span { font-size:0.86rem; }
-.build-card small { font-size:0.7rem; }
+
+.build-card {
+  min-width:12rem;
+  max-width:min(28rem, 100%);
+  min-height:8rem;
+  display:grid;
+  gap:0.45rem;
+  padding:0.55rem;
+  border:3px ridge #dfdfdf;
+  border-radius:0.45rem;
+  background:#ece9d8;
+  color:#111;
+  text-align:left;
+  overflow:hidden;
+}
 .build-card.paired { border-style:double; border-width:5px; }
+.capture11-build-header { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:0.4rem; }
+.capture11-build-target { font-size:1rem; letter-spacing:0.04em; }
+.capture11-build-state { padding:0.12rem 0.35rem; border:1px solid currentColor; font-size:0.7rem; font-weight:800; }
+.capture11-build-owner { justify-self:end; font-size:0.72rem; opacity:0.78; }
+.capture11-build-cards { display:flex; align-items:flex-start; min-height:4.6rem; padding-right:0.4rem; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; }
+.capture11-build-card.lv-playing-card {
+  width:3.05rem;
+  min-width:3.05rem;
+  height:4.35rem;
+  margin-right:-0.78rem;
+  border-radius:0.28rem;
+  box-shadow:1px 2px 2px rgb(0 0 0 / 35%);
+  pointer-events:none;
+}
+.capture11-build-card.lv-playing-card:last-child { margin-right:0; }
+.capture11-build-card .lv-card-corner { font-size:0.48rem; line-height:0.8; inset:0.18rem auto auto 0.18rem; }
+.capture11-build-card .lv-card-corner.flipped { inset:auto 0.18rem 0.18rem auto; }
+.capture11-build-card .lv-card-pips { inset:0.72rem 0.38rem; font-size:0.65rem; }
+.capture11-build-card .lv-card-court { inset:0.72rem 0.4rem; }
+.capture11-build-card .lv-court-half { font-size:0.55rem; }
+.capture11-build-count { font-size:0.72rem; opacity:0.78; }
+.build-card.is-locked .capture11-build-state { background:#202020; color:#fff; }
+.build-card.is-open .capture11-build-state { background:#fff7ce; color:#111; }
+
 .action-panel { display:grid; gap:0.6rem; padding:0.75rem; border:2px outset ButtonBorder; background:Canvas; color:CanvasText; }
 .action-panel h2 { margin:0; font-size:1rem; }
 .action-panel p { margin:0; }
@@ -38,12 +73,26 @@
 .score-row:last-child { border-bottom:0; }
 .score-row strong { text-align:center; }
 .score-head { font-size:0.85rem; opacity:0.85; }
+
+.playtest-diagnostics { border:1px solid currentColor; padding:0.55rem 0.7rem; background:Canvas; color:CanvasText; }
+.playtest-diagnostics summary { cursor:pointer; font-weight:700; }
+.playtest-diagnostics-body { display:grid; gap:0.55rem; margin-top:0.65rem; }
+.playtest-diagnostics-body p { margin:0; }
+.invariant-ok { font-weight:700; }
+.invariant-error { font-weight:900; border:2px solid currentColor; padding:0.45rem; }
+.playtest-log { width:100%; box-sizing:border-box; min-height:8rem; resize:vertical; font:0.75rem/1.35 ui-monospace, SFMono-Regular, Consolas, monospace; background:#111; color:#eee; border:2px inset ButtonBorder; padding:0.5rem; }
+
 html[data-contrast='high'] .card-table { background:#000; border-color:#fff; }
 html[data-contrast='high'] .playing-card { background:#fff; color:#000; }
 html[data-contrast='high'] .playing-card.red-card { color:#a60000; }
+html[data-contrast='high'] .build-card { background:#000; color:#fff; border-color:#fff; }
+html[data-contrast='high'] .build-card.is-open .capture11-build-state { background:#000; color:#fff; }
+html[data-contrast='high'] .build-card.is-locked .capture11-build-state { background:#fff; color:#000; }
+
 @media (max-width:34rem) {
   .card-table { padding:0.7rem; min-height:0; }
   .playing-card, .card-back { width:3.65rem; min-width:3.65rem; height:5.1rem; }
-  .build-card { min-width:8.4rem; }
+  .build-card { min-width:10rem; width:100%; }
+  .capture11-build-card.lv-playing-card { width:2.7rem; min-width:2.7rem; height:3.85rem; margin-right:-0.68rem; }
   .score-row { grid-template-columns:minmax(6.5rem,1fr) 3.5rem 3.5rem; }
 }
