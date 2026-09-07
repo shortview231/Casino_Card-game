@@ -68,21 +68,14 @@ export const capture11: GameModule = {
     };
 
     const makeCpuPlayPanel = (play: CpuPlayPresentation, preview: boolean): HTMLElement => {
-      const panel = document.createElement('section');
-      panel.className = `cpu-play-panel${preview ? ' is-preview' : ''}`;
-      panel.setAttribute('aria-live', 'assertive');
+      const panel = document.createElement('section'); panel.className = `cpu-play-panel${preview ? ' is-preview' : ''}`; panel.setAttribute('aria-live', 'assertive');
       const label = document.createElement('strong'); label.className = 'cpu-play-label'; label.textContent = preview ? 'CPU IS PLAYING' : 'LAST CPU PLAY';
-      const card = document.createElement('span'); card.className = `playing-card cpu-play-card ${cardColorClass(play.card)}`; card.textContent = cardText(play.card);
-      card.setAttribute('aria-label', `${play.card.rank} of ${SUIT_NAME[play.card.suit]}`);
-      const text = document.createElement('div');
-      const heading = document.createElement('h3'); heading.textContent = play.heading;
-      const detail = document.createElement('p'); detail.textContent = play.detail;
-      text.append(heading, detail); panel.append(label, card, text); return panel;
+      const card = document.createElement('span'); card.className = `playing-card cpu-play-card ${cardColorClass(play.card)}`; card.textContent = cardText(play.card); card.setAttribute('aria-label', `${play.card.rank} of ${SUIT_NAME[play.card.suit]}`);
+      const text = document.createElement('div'); const heading = document.createElement('h3'); heading.textContent = play.heading; const detail = document.createElement('p'); detail.textContent = play.detail; text.append(heading, detail); panel.append(label, card, text); return panel;
     };
 
     const makeDiagnostics = (): HTMLDetailsElement => {
-      const diagnostics = document.createElement('details'); diagnostics.className = 'playtest-diagnostics';
-      const invariant = recorder.invariant(state);
+      const diagnostics = document.createElement('details'); diagnostics.className = 'playtest-diagnostics'; const invariant = recorder.invariant(state);
       const summary = document.createElement('summary'); summary.textContent = `Playtest · seed ${recorder.matchSeed} · ${invariant.ok ? '52 cards OK' : 'CARD ERROR'}`;
       const info = document.createElement('div'); info.className = 'playtest-diagnostics-body';
       const seed = document.createElement('p'); seed.innerHTML = `Match seed: <strong>${recorder.matchSeed}</strong> · Hand seed: <strong>${state.seed}</strong> · Hand: <strong>${state.handNumber}</strong>`;
@@ -99,18 +92,11 @@ export const capture11: GameModule = {
       cpuTimer = window.setTimeout(() => {
         cpuTimer = null;
         if (destroyed || state.phase !== 'playing' || state.turn !== 'player2') return;
-        const move = chooseCpuMove(state);
-        cpuPreview = describeCpuMove(state, move);
-        render();
+        const move = chooseCpuMove(state); cpuPreview = describeCpuMove(state, move); render();
         cpuTimer = window.setTimeout(() => {
           cpuTimer = null;
           if (destroyed || state.phase !== 'playing' || state.turn !== 'player2') return;
-          const shown = cpuPreview;
-          applyRecordedMove('player2', move);
-          lastCpuPlay = shown;
-          cpuPreview = null;
-          clearSelection();
-          render();
+          const shown = cpuPreview; applyRecordedMove('player2', move); lastCpuPlay = shown; cpuPreview = null; clearSelection(); render();
         }, 2200);
       }, 650);
     };
@@ -122,12 +108,10 @@ export const capture11: GameModule = {
       const panel = document.createElement('section'); panel.className = 'capture11-score-screen';
       const heading = document.createElement('h1'); heading.textContent = state.phase === 'match-over' ? (state.winner === 'player1' ? 'You win Capture 11!' : 'CPU wins Capture 11') : `Hand ${state.handNumber} complete`;
       const match = document.createElement('p'); match.className = 'match-total'; match.textContent = `Match score: You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}`;
-      const grid = document.createElement('div'); grid.className = 'score-breakdown';
-      const labels = document.createElement('div'); labels.className = 'score-row score-head'; labels.append(document.createElement('span'), Object.assign(document.createElement('strong'), { textContent: 'You' }), Object.assign(document.createElement('strong'), { textContent: 'CPU' }));
+      const grid = document.createElement('div'); grid.className = 'score-breakdown'; const labels = document.createElement('div'); labels.className = 'score-row score-head'; labels.append(document.createElement('span'), Object.assign(document.createElement('strong'), { textContent: 'You' }), Object.assign(document.createElement('strong'), { textContent: 'CPU' }));
       grid.append(labels, scoreLine('Aces', score.scores.player1.aces, score.scores.player2.aces), scoreLine('2♠', score.scores.player1.twoOfSpades, score.scores.player2.twoOfSpades), scoreLine('Most spades', score.scores.player1.mostSpades, score.scores.player2.mostSpades), scoreLine('Most cards', score.scores.player1.mostCards, score.scores.player2.mostCards), scoreLine('10♦', score.scores.player1.tenOfDiamonds, score.scores.player2.tenOfDiamonds), scoreLine('Hand total', score.scores.player1.total, score.scores.player2.total));
       const counts = document.createElement('p'); counts.textContent = `Cards captured: ${score.cardCounts.player1}–${score.cardCounts.player2}. Spades: ${score.spadeCounts.player1}–${score.spadeCounts.player2}.`;
-      const last = document.createElement('p'); last.className = 'last-action'; last.textContent = state.lastAction;
-      panel.append(heading, match, grid, counts, last);
+      const last = document.createElement('p'); last.className = 'last-action'; last.textContent = state.lastAction; panel.append(heading, match, grid, counts, last);
       if (state.phase === 'match-over') panel.append(makeButton('Finish match', () => services.complete({ heading: state.winner === 'player1' ? 'You won Capture 11!' : 'CPU won Capture 11', summary: `Final score: You ${state.players.player1.matchScore}, CPU ${state.players.player2.matchScore}.`, score: state.players.player1.matchScore }), 'primary-action'));
       else panel.append(makeButton('Deal next hand', () => { state = beginNextHand(state); recorder.recordNextHand(state); lastCpuPlay = null; clearSelection(); render(); }, 'primary-action'));
       panel.append(makeDiagnostics()); root.append(panel);
@@ -136,8 +120,7 @@ export const capture11: GameModule = {
     const render = () => {
       if (destroyed) return; if (state.phase !== 'playing') { renderScoreScreen(); return; }
       root.replaceChildren(); const shell = document.createElement('div'); shell.className = 'capture11';
-      const header = document.createElement('header'); header.className = 'capture11-header';
-      const titleWrap = document.createElement('div'); const heading = document.createElement('h1'); heading.textContent = 'Capture 11'; const subtitle = document.createElement('p'); subtitle.textContent = `Hand ${state.handNumber} · First to 11`; titleWrap.append(heading, subtitle);
+      const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); const heading = document.createElement('h1'); heading.textContent = 'Capture 11'; const subtitle = document.createElement('p'); subtitle.textContent = `Hand ${state.handNumber} · First to 11`; titleWrap.append(heading, subtitle);
       const matchScore = document.createElement('div'); matchScore.className = 'match-score'; matchScore.setAttribute('aria-label', `Match score. You ${state.players.player1.matchScore}. CPU ${state.players.player2.matchScore}.`); matchScore.innerHTML = `<span>You <strong>${state.players.player1.matchScore}</strong></span><span>CPU <strong>${state.players.player2.matchScore}</strong></span>`; header.append(titleWrap, matchScore);
       const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>Dealer: <strong>${ownerName(state.dealer)}</strong></span><span>Turn: <strong>${ownerName(state.turn)}</strong></span><span>Deck: <strong>${state.deck.length}</strong></span><span>Captured: <strong>${state.players.player1.captured.length} / ${state.players.player2.captured.length}</strong></span>`;
       const suitKey = document.createElement('p'); suitKey.className = 'suit-key'; suitKey.textContent = 'Suit key: S♠ Spades · H♥ Hearts · D♦ Diamonds · C♣ Clubs';
@@ -146,14 +129,13 @@ export const capture11: GameModule = {
 
       const cpuArea = document.createElement('div'); cpuArea.className = 'player-area cpu-area'; const cpuLabel = document.createElement('h2'); cpuLabel.textContent = `CPU hand · ${state.players.player2.hand.length} cards`; const cpuHand = document.createElement('div'); cpuHand.className = 'cpu-hand';
       for (let i = 0; i < state.players.player2.hand.length; i += 1) { const back = document.createElement('span'); back.className = 'card-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '◆'; cpuHand.append(back); }
-      cpuArea.append(cpuLabel, cpuHand);
-      const playToShow = cpuPreview ?? lastCpuPlay; if (playToShow) cpuArea.append(makeCpuPlayPanel(playToShow, cpuPreview !== null));
+      cpuArea.append(cpuLabel, cpuHand); const playToShow = cpuPreview ?? lastCpuPlay; if (playToShow) cpuArea.append(makeCpuPlayPanel(playToShow, cpuPreview !== null));
 
       const boardArea = document.createElement('div'); boardArea.className = 'board-area'; const boardHeading = document.createElement('h2'); boardHeading.textContent = `Board · ${state.board.length} items`; const boardGrid = document.createElement('div'); boardGrid.className = 'board-grid';
       if (state.board.length === 0) { const empty = document.createElement('p'); empty.textContent = 'Board is clear.'; boardGrid.append(empty); }
       for (const item of state.board) {
         const key = boardKey(item); const selected = selectedBoard.has(key); const button = document.createElement('button'); button.type = 'button'; button.className = item.kind === 'loose' ? `playing-card board-card ${cardColorClass(item.card)}` : `build-card ${item.mode}`; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1';
-        if (item.kind === 'loose') { button.textContent = cardText(item.card); button.setAttribute('aria-label', `${item.rank ?? ''}${cardText(item.card)} on board`); button.setAttribute('aria-label', `${item.card.rank} of ${SUIT_NAME[item.card.suit]} on board`); }
+        if (item.kind === 'loose') { button.textContent = cardText(item.card); button.setAttribute('aria-label', `${item.card.rank} of ${SUIT_NAME[item.card.suit]} on board`); }
         else { renderBuildContents(button, item, ownerName(item.createdBy)); button.setAttribute('aria-label', buildDescription(item)); }
         button.addEventListener('click', () => { if (selectedBoard.has(key)) selectedBoard.delete(key); else selectedBoard.add(key); render(); }); boardGrid.append(button);
       }
@@ -166,12 +148,7 @@ export const capture11: GameModule = {
       const actionPanel = document.createElement('section'); actionPanel.className = 'action-panel'; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'Move'; actionPanel.append(actionHeading);
       if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
       else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to see legal moves.'; actionPanel.append(help); }
-      else {
-        const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]);
-        if (exactMoves.length === 0) { const invalid = document.createElement('p'); invalid.textContent = 'No legal action for that exact selection. Change the board selection, or clear it to trail the card.'; actionPanel.append(invalid); }
-        else { const actions = document.createElement('div'); actions.className = 'action-buttons'; for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : '')); actionPanel.append(actions); }
-        if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action'));
-      }
+      else { const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]); if (exactMoves.length === 0) { const invalid = document.createElement('p'); invalid.textContent = 'No legal action for that exact selection. Change the board selection, or clear it to trail the card.'; actionPanel.append(invalid); } else { const actions = document.createElement('div'); actions.className = 'action-buttons'; for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : '')); actionPanel.append(actions); } if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action')); }
 
       const rules = document.createElement('details'); rules.className = 'rules-help'; const summary = document.createElement('summary'); summary.textContent = 'Quick rules'; const rulesText = document.createElement('div'); rulesText.innerHTML = `<p>Capture loose numeric cards whose values add to the card you play. Face cards capture the same face rank.</p><p>To build, combine your played numeric card with board cards and declare a value you still hold in your hand. Open builds can be raised. Matching paired builds are locked against raises.</p><p>The last player to make a capture gets every card left on the board at the end of the hand.</p><p>Scoring: each Ace 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3. A tie for a category scores nobody. First to 11 match points wins.</p>`; rules.append(summary, rulesText);
       shell.append(header, meta, suitKey, live, table, actionPanel, rules, makeDiagnostics()); root.append(shell); scheduleCpu();
