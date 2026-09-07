@@ -46,6 +46,15 @@ export class MicrogameRuntime {
 
   private showTitle(): void {
     this.clear();
+
+    if (this.game.renderTitle) {
+      this.game.renderTitle(this.root, {
+        play: () => this.showGame(),
+        settings: () => this.showSettings(),
+      });
+      return;
+    }
+
     const section = document.createElement('section');
     section.className = 'screen';
 
