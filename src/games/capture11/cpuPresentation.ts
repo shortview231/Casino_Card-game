@@ -22,7 +22,7 @@ export interface CpuPlayPresentation {
 }
 
 function cardLabel(card: Card): string {
-  return `${card.rank}${SUIT_SYMBOL[card.suit]} (${SUIT_NAME[card.suit]})`;
+  return `${card.rank} of ${SUIT_NAME[card.suit]} (${SUIT_SYMBOL[card.suit]})`;
 }
 
 function playedCard(state: Capture11State, move: Capture11Move): Card {

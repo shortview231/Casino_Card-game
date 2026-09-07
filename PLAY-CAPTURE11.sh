@@ -40,7 +40,11 @@ PY
 )"
 
 cd "$ROOT/dist"
-python3 -m http.server "$PORT" --bind 127.0.0.1 >"$LOGFILE" 2>&1 &
+if command -v setsid >/dev/null 2>&1; then
+  setsid python3 -m http.server "$PORT" --bind 127.0.0.1 >"$LOGFILE" 2>&1 < /dev/null &
+else
+  nohup python3 -m http.server "$PORT" --bind 127.0.0.1 >"$LOGFILE" 2>&1 < /dev/null &
+fi
 PID=$!
 echo "$PID" > "$PIDFILE"
 echo "$PORT" > "$PORTFILE"

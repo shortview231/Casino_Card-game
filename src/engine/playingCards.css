@@ -3,15 +3,17 @@
   --card-paper: #fffdf4;
   --card-edge: #242424;
   --suit-color: #111111;
+  --suit-tint: #f1f1f1;
   position: relative;
-  width: 4.9rem;
-  min-width: 4.9rem;
-  height: 6.85rem;
+  width: 6.25rem;
+  min-width: 6.25rem;
+  height: 8.75rem;
   overflow: hidden;
-  border: 2px solid var(--suit-color);
-  border-radius: 0.42rem;
+  border: 3px solid var(--suit-color);
+  border-radius: 0.46rem;
   background:
     linear-gradient(135deg, rgb(255 255 255 / 72%), transparent 35%),
+    linear-gradient(180deg, var(--suit-tint), transparent 26% 74%, var(--suit-tint)),
     var(--card-paper);
   color: var(--suit-color);
   box-shadow:
@@ -21,10 +23,10 @@
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-.lv-playing-card[data-suit='spades'] { --suit-color: #111111; }
-.lv-playing-card[data-suit='hearts'] { --suit-color: #c3132f; }
-.lv-playing-card[data-suit='diamonds'] { --suit-color: #005fcc; }
-.lv-playing-card[data-suit='clubs'] { --suit-color: #08783e; }
+.lv-playing-card[data-suit='spades'] { --suit-color: #111111; --suit-tint: #ededed; }
+.lv-playing-card[data-suit='hearts'] { --suit-color: #c3132f; --suit-tint: #fff0f2; }
+.lv-playing-card[data-suit='diamonds'] { --suit-color: #005fcc; --suit-tint: #edf5ff; }
+.lv-playing-card[data-suit='clubs'] { --suit-color: #08783e; --suit-tint: #edf9f1; }
 
 .lv-playing-card.lv-card-red,
 .lv-playing-card.lv-card-black { color: var(--suit-color); }
@@ -37,19 +39,19 @@
   display: grid;
   justify-items: center;
   line-height: 0.92;
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   pointer-events: none;
 }
 
 .lv-card-corner strong {
-  font-size: 1.08rem;
+  font-size: 1.45rem;
   line-height: 1;
 }
 
 .lv-corner-suit {
   margin-top: 0.04rem;
   font-family: system-ui, sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.94rem;
   font-weight: 900;
   letter-spacing: -0.03em;
 }
@@ -68,13 +70,13 @@
   top: 0.18rem;
   left: 50%;
   transform: translateX(-50%);
-  min-width: 2rem;
-  padding: 0.09rem 0.28rem;
-  border: 2px solid currentColor;
+  min-width: 3.1rem;
+  padding: 0.12rem 0.34rem;
+  border: 3px solid currentColor;
   border-radius: 0.28rem;
   background: #fffdf4;
   font-family: system-ui, sans-serif;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 950;
   line-height: 1.05;
   text-align: center;
@@ -84,7 +86,7 @@
 
 .lv-card-pips {
   position: absolute;
-  inset: 1rem 0.52rem 0.88rem;
+  inset: 1.35rem 0.72rem 1.1rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(5, 1fr);
@@ -95,7 +97,7 @@
 .lv-card-pip {
   display: grid;
   place-items: center;
-  font-size: 1.08rem;
+  font-size: 1.38rem;
   font-weight: 900;
   line-height: 1;
 }
@@ -103,16 +105,16 @@
 .lv-card-pip.inverted { transform: rotate(180deg); }
 
 .lv-playing-card[data-rank='A'] .lv-card-pip {
-  font-size: 2.5rem;
+  font-size: 3.15rem;
 }
 
 .lv-playing-card[data-rank='10'] .lv-card-pip {
-  font-size: 0.88rem;
+  font-size: 1.08rem;
 }
 
 .lv-card-court {
   position: absolute;
-  inset: 1.15rem 0.62rem 0.92rem;
+  inset: 1.4rem 0.76rem 1.08rem;
   overflow: hidden;
   border: 2px solid currentColor;
   background:
@@ -133,12 +135,12 @@
 }
 
 .lv-court-half strong {
-  font-size: 1.4rem;
+  font-size: 1.85rem;
   text-shadow: 0 1px #fff;
 }
 
-.lv-court-half > span:last-child { font-size: 1.12rem; }
-.lv-court-ornament { color: #315f9c; font-size: 1.15rem; }
+.lv-court-half > span:last-child { font-size: 1.42rem; }
+.lv-court-ornament { color: #315f9c; font-size: 1.4rem; }
 .lv-court-half.flipped { transform: rotate(180deg); }
 
 .lv-playing-card.lv-card-back {
@@ -181,8 +183,8 @@
 
 button.lv-playing-card.lv-playing-card {
   padding: 0;
-  min-height: 6.85rem;
-  min-width: 4.9rem;
+  min-height: 8.75rem;
+  min-width: 6.25rem;
   cursor: pointer;
 }
 
@@ -205,19 +207,21 @@ html[data-contrast='high'] .lv-card-suit-badge {
 
 @media (max-width: 34rem) {
   .lv-playing-card.lv-playing-card {
-    width: 4.25rem;
-    min-width: 4.25rem;
-    height: 5.95rem;
+    width: 5rem;
+    min-width: 5rem;
+    height: 7rem;
   }
 
   button.lv-playing-card.lv-playing-card {
-    min-width: 4.25rem;
-    min-height: 5.95rem;
+    min-width: 5rem;
+    min-height: 7rem;
   }
 
-  .lv-card-suit-badge { font-size: 0.64rem; }
-  .lv-card-pips { inset: 0.96rem 0.42rem 0.76rem; }
-  .lv-card-pip { font-size: 0.92rem; }
-  .lv-playing-card[data-rank='A'] .lv-card-pip { font-size: 2.05rem; }
-  .lv-card-court { inset: 1.05rem 0.5rem 0.82rem; }
+  .lv-card-corner strong { font-size: 1.18rem; }
+  .lv-corner-suit { font-size: 0.76rem; }
+  .lv-card-suit-badge { min-width: 2.4rem; font-size: 0.76rem; border-width: 2px; }
+  .lv-card-pips { inset: 1.12rem 0.52rem 0.86rem; }
+  .lv-card-pip { font-size: 1.02rem; }
+  .lv-playing-card[data-rank='A'] .lv-card-pip { font-size: 2.3rem; }
+  .lv-card-court { inset: 1.2rem 0.56rem 0.9rem; }
 }

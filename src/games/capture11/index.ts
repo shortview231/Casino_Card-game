@@ -123,7 +123,18 @@ export const capture11: GameModule = {
       const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); const heading = document.createElement('h1'); heading.textContent = 'Capture 11'; const subtitle = document.createElement('p'); subtitle.textContent = `Hand ${state.handNumber} · First to 11`; titleWrap.append(heading, subtitle);
       const matchScore = document.createElement('div'); matchScore.className = 'match-score'; matchScore.setAttribute('aria-label', `Match score. You ${state.players.player1.matchScore}. CPU ${state.players.player2.matchScore}.`); matchScore.innerHTML = `<span>You <strong>${state.players.player1.matchScore}</strong></span><span>CPU <strong>${state.players.player2.matchScore}</strong></span>`; header.append(titleWrap, matchScore);
       const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>Dealer: <strong>${ownerName(state.dealer)}</strong></span><span>Turn: <strong>${ownerName(state.turn)}</strong></span><span>Deck: <strong>${state.deck.length}</strong></span><span>Captured: <strong>${state.players.player1.captured.length} / ${state.players.player2.captured.length}</strong></span>`;
-      const suitKey = document.createElement('p'); suitKey.className = 'suit-key'; suitKey.textContent = 'Suit key: S♠ Spades · H♥ Hearts · D♦ Diamonds · C♣ Clubs';
+      const suitKey = document.createElement('p'); suitKey.className = 'suit-key';
+      for (const [className, text] of [
+        ['suit-spades', 'S ♠ Spades'],
+        ['suit-hearts', 'H ♥ Hearts'],
+        ['suit-diamonds', 'D ♦ Diamonds'],
+        ['suit-clubs', 'C ♣ Clubs'],
+      ] as const) {
+        const suit = document.createElement('span');
+        suit.className = className;
+        suit.textContent = text;
+        suitKey.append(suit);
+      }
       const live = document.createElement('p'); live.className = 'last-action'; live.setAttribute('aria-live', 'polite'); live.textContent = state.lastAction;
       const table = document.createElement('section'); table.className = 'card-table'; table.setAttribute('aria-label', 'Capture 11 card table');
 
