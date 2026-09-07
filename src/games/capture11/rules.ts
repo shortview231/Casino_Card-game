@@ -56,9 +56,9 @@ export function canRaiseOpenBuild(
   return build.target + playedValue === declaredTarget;
 }
 
-function canPartitionIntoTargetGroups(values: readonly number[], target: number): boolean {
+function canPartitionIntoTargetGroups(values: readonly number[], target: number, minimumGroups: number): boolean {
   const total = values.reduce((sum, value) => sum + value, 0);
-  if (total < target * 2 || total % target !== 0 || values.some((value) => value > target)) return false;
+  if (total < target * minimumGroups || total % target !== 0 || values.some((value) => value > target)) return false;
 
   const groupCount = total / target;
   const groups = Array.from({ length: groupCount }, () => 0);
@@ -93,7 +93,7 @@ export function canCreatePairedBuild(
 
   const values = [playedCard, ...selectedLooseCards.map((item) => item.card)].map(numericBuildValue);
   if (values.some((value) => value === null)) return false;
-  return canPartitionIntoTargetGroups(values as number[], declaredTarget);
+  return canPartitionIntoTargetGroups(values as number[], declaredTarget, 2);
 }
 
 export function canExtendPairedBuild(
@@ -111,4 +111,18 @@ export function canExtendPairedBuild(
 export function canCaptureBuild(playedCard: Card, build: NumericBuild): boolean {
   const playedValue = numericBuildValue(playedCard);
   return playedValue !== null && playedValue === build.target;
+}
+
+export function canCaptureCombinedSelection(
+  playedCard: Card,
+  selectedBuilds: readonly NumericBuild[],
+  selectedLooseCards: readonly LooseBoardCard[],
+): boolean {
+  const playedValue = numericBuildValue(playedCard);
+  if (playedValue === null || selectedBuilds.length === 0 || selectedLooseCards.length === 0) return false;
+  if (selectedBuilds.some((build) => build.target !== playedValue)) return false;
+
+  const looseValues = selectedLooseCards.map((item) => numericBuildValue(item.card));
+  if (looseValues.some((value) => value === null)) return false;
+  return canPartitionIntoTargetGroups(looseValues as number[], playedValue, 1);
 }

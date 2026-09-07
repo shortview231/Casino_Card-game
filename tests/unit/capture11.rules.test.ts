@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Card, LooseBoardCard, NumericBuild, Rank, Suit } from '../../src/games/capture11/model';
 import {
   canCaptureBuild,
+  canCaptureCombinedSelection,
   canCaptureLooseSelection,
   canCreateOpenBuild,
   canCreatePairedBuild,
@@ -102,6 +103,17 @@ describe('Capture 11 builds', () => {
     ).toBe(true);
   });
 
+  it('locks played 3 plus loose 4 and loose 7 at 7 while another 7 remains in hand', () => {
+    expect(
+      canCreatePairedBuild(
+        card('3', 'spades'),
+        [loose('4', 'clubs'), loose('7', 'diamonds')],
+        [card('7', 'hearts')],
+        7,
+      ),
+    ).toBe(true);
+  });
+
   it('rejects selected cards that cannot be partitioned into target groups', () => {
     expect(
       canCreatePairedBuild(
@@ -152,5 +164,46 @@ describe('Capture 11 builds', () => {
 
     expect(canCaptureBuild(card('8', 'spades'), build)).toBe(true);
     expect(canCaptureBuild(card('7', 'spades'), build)).toBe(false);
+  });
+
+  it('captures a locked 10 build and loose 9 + A together with a 10', () => {
+    const build: NumericBuild = {
+      kind: 'build',
+      id: 'locked-10',
+      cards: [card('10', 'clubs'), card('10', 'hearts')],
+      target: 10,
+      mode: 'paired',
+      createdBy: 'player1',
+    };
+
+    expect(
+      canCaptureCombinedSelection(
+        card('10', 'spades'),
+        [build],
+        [loose('9', 'diamonds'), loose('A', 'clubs', 'A-clubs-loose')],
+      ),
+    ).toBe(true);
+  });
+
+  it('captures a 7 build and loose 3 + 4 together with a 7', () => {
+    const build: NumericBuild = {
+      kind: 'build',
+      id: 'locked-7',
+      cards: [card('2', 'clubs'), card('5', 'hearts')],
+      target: 7,
+      mode: 'paired',
+      createdBy: 'player2',
+    };
+
+    expect(
+      canCaptureCombinedSelection(
+        card('7', 'spades'),
+        [build],
+        [loose('3', 'diamonds'), loose('4', 'clubs', '4-clubs-loose')],
+      ),
+    ).toBe(true);
+    expect(
+      canCaptureCombinedSelection(card('7', 'spades'), [build], [loose('6', 'diamonds')]),
+    ).toBe(false);
   });
 });

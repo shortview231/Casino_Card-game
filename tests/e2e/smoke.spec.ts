@@ -74,3 +74,44 @@ test('automated accessibility scan has no serious or critical violations', async
   );
   expect(blocking).toEqual([]);
 });
+
+test('BUG-001 locks 3 + 4 and a loose 7 into one fixed BUILD 7', async ({ page }) => {
+  await page.addInitScript(() => {
+    Date.now = () => 142;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play vs CPU' }).click();
+
+  await page.getByRole('button', { name: '3 of Clubs in your hand' }).click();
+  await page.getByRole('button', { name: '4 of Spades on board' }).click();
+  await page.getByRole('button', { name: '7 of Hearts on board' }).click();
+
+  const lock = page.getByRole('button', { name: 'Lock paired 7' });
+  await expect(lock).toBeVisible();
+  await lock.click();
+  await expect(page.getByRole('button', { name: /7 build, locked, You/ })).toBeVisible();
+});
+
+test('BUG-002 captures BUILD 10 plus loose 9 + A with one 10', async ({ page }) => {
+  await page.addInitScript(() => {
+    Date.now = () => 1848;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play vs CPU' }).click();
+
+  await page.getByRole('button', { name: '10 of Diamonds in your hand' }).click();
+  await page.getByRole('button', { name: '10 of Clubs on board' }).click();
+  await page.getByRole('button', { name: 'Lock paired 10' }).click();
+
+  await expect(page.getByText('Your turn', { exact: true })).toBeVisible({ timeout: 8_000 });
+  await page.getByRole('button', { name: '10 of Spades in your hand' }).click();
+  await page.getByRole('button', { name: /10 build, locked/ }).click();
+  await page.getByRole('button', { name: '9 of Hearts on board' }).click();
+  await page.getByRole('button', { name: 'A of Spades on board' }).click();
+
+  const capture = page.getByRole('button', { name: 'Capture 1 build + 2 loose' });
+  await expect(capture).toBeVisible();
+  await capture.click();
+  await expect(page.getByRole('heading', { name: /YOUR HAND .* 5 captured/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /10 build, locked/ })).toHaveCount(0);
+});

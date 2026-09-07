@@ -30,6 +30,7 @@ function actionLabel(move: Capture11Move, state: Capture11State): string {
     const build = state.board.find((item) => item.kind === 'build' && item.id === move.buildId);
     return `Capture ${build?.kind === 'build' ? build.target : ''} build`;
   }
+  if (move.type === 'capture-combined') return `Capture ${move.buildIds.length} build + ${move.cardIds.length} loose`;
   if (move.type === 'build-open') return `Build ${move.target}`;
   if (move.type === 'build-paired') return `Lock paired ${move.target}`;
   if (move.type === 'extend-paired') return `Add another ${move.target} group`;

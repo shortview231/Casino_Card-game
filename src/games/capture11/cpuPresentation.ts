@@ -64,6 +64,18 @@ export function describeCpuMove(state: Capture11State, move: Capture11Move): Cpu
           : 'Captures a build.',
       };
     }
+    case 'capture-combined': {
+      const buildCards = move.buildIds.flatMap((id) => buildById(state, id)?.cards ?? []);
+      const looseCards = move.cardIds
+        .map((id) => state.board.find((item) => item.kind === 'loose' && item.card.id === id))
+        .filter((item): item is Extract<(typeof state.board)[number], { kind: 'loose' }> => item?.kind === 'loose')
+        .map((item) => item.card);
+      return {
+        card,
+        heading: `CPU plays ${cardName}`,
+        detail: `Captures ${move.buildIds.length} build${move.buildIds.length === 1 ? '' : 's'} plus ${[...buildCards, ...looseCards].map(cardLabel).join(' + ')}.`,
+      };
+    }
     case 'build-open':
       return { card, heading: `CPU plays ${cardName}`, detail: `Creates open BUILD ${move.target}.` };
     case 'build-paired':

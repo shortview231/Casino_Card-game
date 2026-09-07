@@ -3,6 +3,7 @@ import { MATCH_TARGET, nextDealer, numericBuildValue, otherPlayer } from './mode
 import { openingDeal, redealHands, shuffledDeck } from './deck';
 import {
   canCaptureBuild,
+  canCaptureCombinedSelection,
   canCaptureLooseSelection,
   canCreateOpenBuild,
   canCreatePairedBuild,
@@ -25,6 +26,7 @@ export type Capture11Move =
   | { readonly type: 'trail'; readonly handCardId: string }
   | { readonly type: 'capture-loose'; readonly handCardId: string; readonly cardIds: readonly string[] }
   | { readonly type: 'capture-build'; readonly handCardId: string; readonly buildId: string }
+  | { readonly type: 'capture-combined'; readonly handCardId: string; readonly buildIds: readonly string[]; readonly cardIds: readonly string[] }
   | { readonly type: 'build-open'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'build-paired'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'extend-paired'; readonly handCardId: string; readonly buildId: string; readonly cardIds: readonly string[]; readonly target: number }
@@ -94,6 +96,11 @@ function buildById(board: readonly BoardItem[], id: string): NumericBuild {
   const item = board.find((candidate) => candidate.kind === 'build' && candidate.id === id);
   if (!item || item.kind !== 'build') throw new Error('Selected build is not on the board');
   return item;
+}
+
+function buildsByIds(board: readonly BoardItem[], ids: readonly string[]): NumericBuild[] {
+  if (new Set(ids).size !== ids.length) throw new Error('Duplicate build selection');
+  return ids.map((id) => buildById(board, id));
 }
 
 function withoutHandCard(hand: readonly Card[], cardId: string): Card[] {
@@ -208,6 +215,24 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       players[player] = { ...players[player], captured: [...players[player].captured, ...build.cards, played] };
       lastCapturer = player;
       lastAction = `${player === 'player1' ? 'You capture' : 'CPU captures'} a ${build.target} build (${build.cards.length} cards) with ${describeCard(played)}.`;
+      break;
+    }
+    case 'capture-combined': {
+      const selectedBuilds = buildsByIds(board, move.buildIds);
+      const selectedLoose = looseByIds(board, move.cardIds);
+      if (!canCaptureCombinedSelection(played, selectedBuilds, selectedLoose)) throw new Error('That combined capture is not legal');
+      const selectedBuildIds = new Set(selectedBuilds.map((build) => build.id));
+      const selectedLooseIds = new Set(selectedLoose.map((item) => item.card.id));
+      board = board.filter((item) => item.kind === 'build'
+        ? !selectedBuildIds.has(item.id)
+        : !selectedLooseIds.has(item.card.id));
+      const captured = [
+        ...selectedBuilds.flatMap((build) => build.cards),
+        ...selectedLoose.map((item) => item.card),
+      ];
+      players[player] = { ...players[player], captured: [...players[player].captured, ...captured, played] };
+      lastCapturer = player;
+      lastAction = `${player === 'player1' ? 'You capture' : 'CPU captures'} ${selectedBuilds.length} build${selectedBuilds.length === 1 ? '' : 's'} and ${selectedLoose.length} loose card${selectedLoose.length === 1 ? '' : 's'} with ${describeCard(played)}.`;
       break;
     }
     case 'build-open': {
@@ -356,6 +381,42 @@ function pairedBuildSelections(
   return results;
 }
 
+function combinedCaptureSelections(
+  cards: readonly LooseBoardCard[],
+  played: Card,
+  build: NumericBuild,
+  limit = 96,
+): LooseBoardCard[][] {
+  const playedValue = numericBuildValue(played);
+  if (playedValue === null || build.target !== playedValue) return [];
+  const candidates = cards.filter((item) => {
+    const value = numericBuildValue(item.card);
+    return value !== null && value <= playedValue;
+  });
+  const results: LooseBoardCard[][] = [];
+  const chosen: LooseBoardCard[] = [];
+  let visited = 0;
+
+  const visit = (start: number) => {
+    // Exact human selections are unbounded; this guard only limits CPU
+    // candidate enumeration on crowded boards.
+    if (results.length >= limit || visited >= 8192) return;
+    visited += 1;
+    if (chosen.length > 0 && canCaptureCombinedSelection(played, [build], chosen)) {
+      results.push([...chosen]);
+    }
+    for (let index = start; index < candidates.length; index += 1) {
+      chosen.push(candidates[index]!);
+      visit(index + 1);
+      chosen.pop();
+      if (results.length >= limit || visited >= 8192) return;
+    }
+  };
+
+  visit(0);
+  return results;
+}
+
 function uniqueMoves(moves: readonly Capture11Move[]): Capture11Move[] {
   const seen = new Set<string>();
   const result: Capture11Move[] = [];
@@ -397,6 +458,14 @@ export function legalMoves(state: Capture11State, player: PlayerId): Capture11Mo
     for (const build of boardBuilds) {
       if (canCaptureBuild(played, build)) {
         moves.push({ type: 'capture-build', handCardId: played.id, buildId: build.id });
+      }
+      for (const selection of combinedCaptureSelections(loose, played, build)) {
+        moves.push({
+          type: 'capture-combined',
+          handCardId: played.id,
+          buildIds: [build.id],
+          cardIds: selection.map((item) => item.card.id),
+        });
       }
       const raisedTarget = build.target + value;
       if (canRaiseOpenBuild(played, build, remaining, raisedTarget)) {
@@ -478,8 +547,12 @@ export function movesForExactSelection(
     return uniqueMoves(moves);
   }
 
-  if (buildIds.length !== 1) return [];
-  const build = buildById(state.board, buildIds[0]!);
+  const selectedBuilds = buildsByIds(state.board, buildIds);
+  if (canCaptureCombinedSelection(played, selectedBuilds, selectedLoose)) {
+    moves.push({ type: 'capture-combined', handCardId, buildIds, cardIds: looseIds });
+  }
+  if (buildIds.length !== 1) return uniqueMoves(moves);
+  const build = selectedBuilds[0]!;
   if (selectedLoose.length === 0 && canCaptureBuild(played, build)) {
     moves.push({ type: 'capture-build', handCardId, buildId: build.id });
   }

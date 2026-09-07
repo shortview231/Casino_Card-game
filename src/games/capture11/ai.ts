@@ -34,6 +34,15 @@ function scoreMove(state: Capture11State, player: PlayerId, move: Capture11Move)
     return 120 + cards.length * 8 + cards.reduce((sum, card) => sum + cardTacticalValue(card), 0) + cardTacticalValue(played);
   }
 
+  if (move.type === 'capture-combined') {
+    const captured = state.board.flatMap((item) => {
+      if (item.kind === 'build' && move.buildIds.includes(item.id)) return [...item.cards];
+      if (item.kind === 'loose' && move.cardIds.includes(item.card.id)) return [item.card];
+      return [];
+    });
+    return 120 + captured.length * 8 + captured.reduce((sum, card) => sum + cardTacticalValue(card), 0) + cardTacticalValue(played);
+  }
+
   if (move.type === 'raise-build') {
     const build = state.board.find((item) => item.kind === 'build' && item.id === move.buildId);
     const enemyBonus = build?.kind === 'build' && build.createdBy !== player ? 20 : 0;

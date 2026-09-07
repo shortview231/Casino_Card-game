@@ -4,7 +4,7 @@ This file is the running journal for bugs found during real playtesting. Do not 
 
 ## BUG-001 — Paired/fixed build rejects matching target card
 
-- **Status:** OPEN — REPRODUCED / CONSISTENT PATTERN
+- **Status:** FIXED IN CODE — PENDING ITCH.IO RECHECK
 - **Found:** 2026-09-07
 - **Environment:** itch.io embedded HTML5 build, external-site playtest
 - **Deployed game commit:** `e7718d76a649347e6aee2fb1e577edd1739f7f5d`
@@ -59,18 +59,16 @@ For the reproduced 7 example, the legal locked build should contain:
 
 The engine accepts or recognizes the arithmetic group but rejects/omits the separate loose card whose value already equals the target, preventing the legal fixed/paired build from being formed correctly.
 
-### Notes for later investigation
+### Regression coverage
 
-- Do **not** change the rules or code yet.
-- Treat this as a consistent paired/fixed-build handling bug.
-- Reproduce with several targets, for example 5, 7, and 10, to confirm it is value-independent.
-- Compare the legal-move generation path for open builds versus paired/fixed builds when a loose board card exactly equals the target.
-- Capture the playtest seed/move log if convenient on the next occurrence.
-- Robert's family-rule description is authoritative for this bug log.
+- Unit coverage confirms played `3` plus loose `4` and loose `7` creates one locked BUILD 7 while another 7 remains in hand.
+- Value-independent unit coverage retains the BUILD 9 case using `2 + 7` plus loose `9`.
+- Chromium desktop and mobile coverage uses deterministic seed `142` to make and render the required locked BUILD 7 through the actual game controls.
+- The fix remains pending Robert's confirmation in the redeployed itch.io build.
 
 ## BUG-002 — Simultaneous locked-build + loose-value capture rejected
 
-- **Status:** OPEN — FIRST OBSERVATION
+- **Status:** FIXED IN CODE — PENDING ITCH.IO RECHECK
 - **Found:** 2026-09-07
 - **Environment:** itch.io embedded HTML5 build, external-site playtest
 - **Deployed game commit:** `e7718d76a649347e6aee2fb1e577edd1739f7f5d`
@@ -119,10 +117,9 @@ Robert identified this board state as a problem during live playtesting. The app
 
 The engine rejects the combined selection as illegal instead of offering the capture.
 
-### Notes for later investigation
+### Regression coverage
 
-- Do **not** fix yet.
-- Reproduce with another target value, for example a BUILD 7 plus loose `3 + 4`, while playing a 7.
-- Check whether the engine currently permits only one capture source type at a time: loose cards OR a build.
-- Compare `movesForExactSelection` / legal move generation for combined build and loose-card selections.
-- Keep BUG-002 separate from BUG-001 unless code investigation proves they are the same root cause.
+- Unit coverage confirms a played 10 captures an existing locked BUILD 10 plus loose `9 + A` atomically, including every selected and played card.
+- Additional unit coverage confirms a played 7 captures BUILD 7 plus loose `3 + 4`, making the fix value-independent.
+- Chromium desktop and mobile coverage uses deterministic seed `1848` to form BUILD 10, select it with loose `9 + A`, expose the combined-capture action, and collect all five cards through the actual game controls.
+- The fix remains pending Robert's confirmation in the redeployed itch.io build.
