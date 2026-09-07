@@ -32,7 +32,13 @@ export interface MountedGame {
   destroy(): void;
 }
 
+export interface GameTitleActions {
+  play(): void;
+  settings(): void;
+}
+
 export interface GameModule {
   manifest: GameManifest;
+  renderTitle?(root: HTMLElement, actions: GameTitleActions): void;
   mount(root: HTMLElement, services: GameServices): MountedGame;
 }
