@@ -2,45 +2,68 @@
 
 This file is the running journal for bugs found during real playtesting. Do not fix entries merely because they are logged. Preserve the observed behavior first, gather reproduction evidence, then address bugs in a separate fix pass.
 
-## BUG-001 — Valid multi-card / stacked build rejected
+## BUG-001 — Paired/fixed build rejects matching target card
 
-- **Status:** OPEN
+- **Status:** OPEN — REPRODUCED / CONSISTENT PATTERN
 - **Found:** 2026-09-07
 - **Environment:** itch.io embedded HTML5 build, external-site playtest
 - **Deployed game commit:** `e7718d76a649347e6aee2fb1e577edd1739f7f5d`
-- **Hand:** 1
-- **Deck remaining:** 16
 - **Reporter:** Robert Sory
 - **Severity:** Gameplay / rules blocker
 
-### What happened
+### Family rule involved
+
+When a new group is built to a target value and there is also a loose board card already equal to that target, that matching card belongs in the same fixed/paired build. The build is then locked at that target and is not raisable.
+
+Example pattern: a target 7 may contain one group totaling 7, such as `3 + 4`, plus a separate loose `7`. If the player still holds a `7` as the pickup card, those groups should be combined into a locked/fixed 7 build.
+
+### First observed failure
 
 During a live hand on itch.io, the game rejected a build/stack selection that Robert expected to be legal. The UI displayed:
 
 > Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.
 
-Robert had already made a similar multi-card build earlier in the same testing session and was able to grow it to roughly a seven-card stack, so this rejection is inconsistent with behavior that had already worked.
-
-### Visible state in the screenshot
+Visible state in the screenshot:
 
 - Player hand included: `3♥`, `10♦`, `4♣`, `8♠`
 - Selected hand card: `10♦`
 - Board visibly included: `9♣`, `K♣`, `6♣`, `10♠`, `A♠`
-- The screenshot shows board selections around the cards involved in the attempted play.
 - CPU had 15 captured cards; player had 8 captured cards.
+
+Robert had already made a similar multi-card stack earlier in the same testing session and was able to grow it to roughly seven cards, so the failure appeared inconsistent.
+
+### Second reproduction / consistent pattern identified
+
+Robert reproduced the problem in a clearer paired-build scenario:
+
+- Player hand included a `7` and a `3`.
+- Board contained a loose `7`, a `4`, and a `3`.
+- The intended play was to create a target-7 build using a `3 + 4 = 7` group while also including the loose board `7` as the second equal-value group.
+- Under the family rule, the presence of the matching loose `7` should make this a fixed/paired 7 build while the player still holds the pickup `7`.
+- The game would allow the arithmetic group but effectively forced the matching loose `7` to be ignored instead of including it in the locked build.
+
+Robert reports this same failure pattern occurs specifically when a loose board card already equals the intended build total. This makes BUG-001 reproducible rather than a one-off selection error.
 
 ### Expected behavior
 
-The game should allow the same legal stacked/multi-group build behavior that worked earlier in the session, including adding cards/groups toward the held target when the family rules permit it.
+If the player legally creates a target value and another loose board card already equals that same target, the game should allow both equal-value groups to be combined into the fixed/paired build, provided the player still holds the pickup card required by the family rules.
+
+For the reproduced 7 example, the legal locked build should contain:
+
+- group 1: loose `7`
+- group 2: `3 + 4 = 7`
+- target: `7`
+- state: fixed/paired, not raisable
 
 ### Actual behavior
 
-The engine rejected the selected board combination as neither a legal capture nor a legal build.
+The engine accepts or recognizes the arithmetic group but rejects/omits the separate loose card whose value already equals the target, preventing the legal fixed/paired build from being formed correctly.
 
 ### Notes for later investigation
 
 - Do **not** change the rules or code yet.
-- First reproduce the exact selection and compare it with the earlier successful multi-card stack case.
-- Capture the playtest seed/move log if the issue occurs again.
-- Check whether the rejection depends on the presence of an existing target-value loose card, multiple equal-value groups, or the exact paired/locked-build path.
-- Treat Robert's report that this pattern is legal under the family rules as authoritative for the bug log. The exact engine condition causing the rejection remains unknown.
+- Treat this as a consistent paired/fixed-build handling bug.
+- Reproduce with several targets, for example 5, 7, and 10, to confirm it is value-independent.
+- Compare the legal-move generation path for open builds versus paired/fixed builds when a loose board card exactly equals the target.
+- Capture the playtest seed/move log if convenient on the next occurrence.
+- Robert's family-rule description is authoritative for this bug log.
