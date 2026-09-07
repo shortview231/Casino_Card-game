@@ -83,3 +83,34 @@ The tester's phrase “I need 11” suggests the current presentation may accide
 Do not interpret this feedback as evidence that the game rules are inherently too complicated. Treat it as evidence that the current first-turn teaching and action affordances are not yet self-explanatory to a novice.
 
 Before a broad public launch, add a focused first-game onboarding pass that teaches one legal move at a time without requiring Robert to explain the rules. Preserve the fast experienced-player flow after onboarding is dismissed/completed. Do not redesign the established polished visual identity solely to solve this.
+
+## 2026-09-07 — Onboarding design decision after novice feedback
+
+Robert approved turning the novice failure into a deliberate teaching system rather than merely adding more written rules.
+
+### Decision
+
+Create two teaching layers:
+
+1. **Contextual first-turn guidance inside normal Play vs CPU** that tells the player what to click next, highlights legal follow-up choices, makes the action that completes the move obvious, and explicitly explains that 11 is the cumulative match score rather than the value each play must make.
+2. **A separate Guided Tutorial / Learn to Play mode** with deterministic prepared hands and board states. The tutorial should require the player to perform the real interactions themselves while the game highlights and explains the next step.
+
+### Minimum tutorial lessons
+
+- numeric capture using a simple example such as `4` capturing `A + 3`
+- matching face-card capture
+- simple build such as playing `3` with board `4` while still holding `7` to create BUILD 7
+- later pickup/capture of that build
+- scoring explanation and explicit clarification that first to 11 refers to cumulative match points
+
+Locked/fixed builds can be an advanced lesson after the basic tutorial if the full rule is too much for a first-time player.
+
+### Main-menu implication
+
+Keep **Play vs CPU** available immediately, but add **Learn to Play** as a separate menu choice near it. Keep **How to Play** as the written reference rather than replacing it.
+
+### Implementation order
+
+Finish the current BUG-003 mobile usability pass first so the tutorial is built on a phone-playable layout. Then implement the onboarding/tutorial work as the next pre-public-launch UX pass.
+
+Full design and acceptance criteria are recorded in `ONBOARDING_TUTORIAL_PLAN.md`.
