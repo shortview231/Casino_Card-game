@@ -28,6 +28,13 @@ const SUIT_LABEL: Readonly<Record<StandardSuit, string>> = {
   clubs: 'clubs',
 };
 
+const SUIT_SHORT: Readonly<Record<StandardSuit, string>> = {
+  spades: 'S',
+  hearts: 'H',
+  diamonds: 'D',
+  clubs: 'C',
+};
+
 const PIP_POSITIONS: Readonly<Record<string, readonly [row: number, column: number][]>> = {
   A: [[3, 2]],
   '2': [[1, 2], [5, 2]],
@@ -41,17 +48,26 @@ const PIP_POSITIONS: Readonly<Record<string, readonly [row: number, column: numb
   '10': [[1, 1], [1, 3], [2, 1], [2, 3], [3, 1], [3, 3], [4, 1], [4, 3], [5, 1], [5, 3]],
 };
 
-function corner(rank: string, symbol: string, flipped = false): HTMLSpanElement {
+function corner(rank: string, symbol: string, suit: StandardSuit, flipped = false): HTMLSpanElement {
   const index = document.createElement('span');
   index.className = `lv-card-corner${flipped ? ' flipped' : ''}`;
 
   const rankText = document.createElement('strong');
   rankText.textContent = rank;
   const suitText = document.createElement('span');
-  suitText.textContent = symbol;
+  suitText.className = 'lv-corner-suit';
+  suitText.textContent = `${SUIT_SHORT[suit]}${symbol}`;
 
   index.append(rankText, suitText);
   return index;
+}
+
+function suitBadge(suit: StandardSuit, symbol: string): HTMLSpanElement {
+  const badge = document.createElement('span');
+  badge.className = 'lv-card-suit-badge';
+  badge.textContent = `${SUIT_SHORT[suit]} ${symbol}`;
+  badge.setAttribute('aria-hidden', 'true');
+  return badge;
 }
 
 function pipLayout(rank: string, symbol: string): HTMLElement {
@@ -95,8 +111,8 @@ function courtLayout(rank: string, symbol: string): HTMLElement {
 
 /**
  * Paint a standard playing-card face into an existing element.
- * The deck is entirely HTML/CSS, so it scales without raster artwork and has
- * no third-party image dependency.
+ * Suits intentionally use four distinct colors plus letter+symbol badges so
+ * low-vision players never have to distinguish suits by pip shape alone.
  */
 export function renderPlayingCardFace(host: HTMLElement, card: PlayingCardVisual): void {
   const symbol = SUIT_SYMBOL[card.suit];
@@ -113,7 +129,12 @@ export function renderPlayingCardFace(host: HTMLElement, card: PlayingCardVisual
     ? courtLayout(card.rank, symbol)
     : pipLayout(card.rank, symbol);
 
-  host.append(corner(card.rank, symbol), center, corner(card.rank, symbol, true));
+  host.append(
+    corner(card.rank, symbol, card.suit),
+    suitBadge(card.suit, symbol),
+    center,
+    corner(card.rank, symbol, card.suit, true),
+  );
 }
 
 /** Paint the reusable Capture 11 / Microgame Engine card back. */
