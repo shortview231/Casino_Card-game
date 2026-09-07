@@ -6,60 +6,72 @@ This repository and branch are the source of truth for the Capture 11 Linux play
 
 `capture-11-rebuild-v0.1`
 
+## Primary user command
+
+When the user says exactly or approximately:
+
+`do next move`
+
+Codex must NOT ask for a long prompt. Treat that phrase as authorization to continue the Capture 11 workflow below.
+
+On `do next move`:
+
+1. Confirm you are inside the existing local clone of `shortview231/Casino_Card-game`.
+2. Do not guess the path. Use the current working directory, Git metadata, `pwd`, `git remote -v`, and `git branch --show-current`.
+3. Read this `AGENTS.md` and `NEXT_MOVE.md`.
+4. Pull the latest `capture-11-rebuild-v0.1` branch using the existing repo workflow.
+5. Execute the current unblocked task in `NEXT_MOVE.md`.
+6. Verify the result locally before reporting success.
+7. Update `NEXT_MOVE.md` only when the task is actually complete and the next task is known.
+8. Give the user a very short completion report.
+
+Do not require the user to restate repository, branch, paths, ports, or setup instructions on each turn.
+
 ## Division of responsibility
 
 - ChatGPT may update game code in GitHub on the required branch.
-- Codex owns only the user's local Linux checkout, launcher, local verification, and machine-specific troubleshooting unless the user explicitly asks Codex to edit game code.
+- Codex owns the user's local Linux checkout, launcher, local verification, and machine-specific troubleshooting.
+- Codex may edit game code when `NEXT_MOVE.md` explicitly assigns it a code task or when the user directly asks Codex to fix something.
 - Do not create ZIP-based update workflows.
 - Do not create duplicate project copies unless the user explicitly asks.
-- Do not guess filesystem paths. Inspect with `pwd`, `ls`, `find`, or Git before acting.
+- Do not guess filesystem paths.
 
 ## Permanent local model
 
-There should be one persistent Git clone on the user's Linux PC. Once it exists, all future updates happen through Git pull, never by downloading a new ZIP.
+Use one persistent Git clone only.
 
-The local checkout should track:
+Repository:
+`https://github.com/shortview231/Casino_Card-game.git`
 
-- repository: `https://github.com/shortview231/Casino_Card-game.git`
-- branch: `capture-11-rebuild-v0.1`
+Branch:
+`capture-11-rebuild-v0.1`
 
-## Existing repo commands
+## Standard commands
 
 From the repository root:
 
 - update/build: `bash ./UPDATE-CAPTURE11.sh`
 - play: `bash ./PLAY-CAPTURE11.sh`
-- stop local playtest server: `bash ./STOP-CAPTURE11.sh`
-
-These scripts are part of the repository and should be treated as the standard local workflow.
+- stop: `bash ./STOP-CAPTURE11.sh`
 
 ## Ports
 
 - Never use or kill port `8765`; it belongs to another Lucid Vision service.
-- The Capture 11 launcher chooses its own available port beginning at `43111` and records only its own PID/port.
+- Capture 11 chooses its own available port beginning at `43111` and records only its own PID/port.
 - Never kill an arbitrary process merely because a preferred port is occupied.
 
-## Local setup task for Codex
+## Verification rules
 
-On first use only:
+Do not report success from source inspection alone.
 
-1. Inspect the user's filesystem and find whether a Git clone of this repo already exists.
-2. If a valid clone exists, reuse it instead of cloning another copy.
-3. If no valid clone exists, ask the user where the single permanent clone should live or use a path the user has explicitly approved.
-4. Ensure the clone is on `capture-11-rebuild-v0.1`.
-5. Run `npm install --no-audit --no-fund`.
-6. Run `bash ./UPDATE-CAPTURE11.sh`.
-7. Run `bash ./PLAY-CAPTURE11.sh` and visually verify that Capture 11, not another localhost app, opens.
-8. Optionally create a desktop launcher that executes `PLAY-CAPTURE11.sh` from that verified clone.
+For UI/gameplay tasks, verify the actual local browser view.
+For build tasks, verify the command exits successfully.
+For launcher tasks, verify the correct Capture 11 page opens.
 
-## Verification target
-
-Current expected playtest features include:
+Current expected accessibility features include:
 
 - four visually differentiated suits
-- suit letters S/H/D/C plus suit symbols
+- S/H/D/C suit letters plus suit symbols
 - CPU played-card reveal before board resolution
 - persistent Last CPU Play information
 - Capture 11 Human vs CPU gameplay
-
-Do not report success until the actual local browser view has been checked.
