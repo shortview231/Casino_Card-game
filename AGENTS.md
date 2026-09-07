@@ -6,6 +6,20 @@ This repository and branch are the source of truth for the Capture 11 Linux play
 
 `capture-11-rebuild-v0.1`
 
+## Permanent Linux checkout
+
+Use exactly one persistent checkout at:
+
+`/home/robertsory/Desktop/Capture 11/Capture11-Dev`
+
+Repository:
+`https://github.com/shortview231/Casino_Card-game.git`
+
+Branch:
+`capture-11-rebuild-v0.1`
+
+If no valid local clone exists, Codex is authorized to create this directory and clone the repository there. Do not ask the user for another path. Do not create any second clone.
+
 ## Primary user command
 
 When the user says exactly or approximately:
@@ -16,14 +30,15 @@ Codex must NOT ask for a long prompt. Treat that phrase as authorization to cont
 
 On `do next move`:
 
-1. Confirm you are inside the existing local clone of `shortview231/Casino_Card-game`.
-2. Do not guess the path. Use the current working directory, Git metadata, `pwd`, `git remote -v`, and `git branch --show-current`.
-3. Read this `AGENTS.md` and `NEXT_MOVE.md`.
-4. Pull the latest `capture-11-rebuild-v0.1` branch using the existing repo workflow.
-5. Execute the current unblocked task in `NEXT_MOVE.md`.
-6. Verify the result locally before reporting success.
-7. Update `NEXT_MOVE.md` only when the task is actually complete and the next task is known.
-8. Give the user a very short completion report.
+1. Check whether `/home/robertsory/Desktop/Capture 11/Capture11-Dev` is already a valid clone of `shortview231/Casino_Card-game`.
+2. If it is not present, create the parent directory if needed and clone the repository into exactly that path.
+3. Checkout `capture-11-rebuild-v0.1`.
+4. Read this `AGENTS.md` and `NEXT_MOVE.md`.
+5. Run the standard update/build workflow.
+6. Execute the current unblocked task in `NEXT_MOVE.md`.
+7. Verify the result locally before reporting success.
+8. Update `NEXT_MOVE.md` only when the task is actually complete and the next task is known.
+9. Give the user a very short completion report.
 
 Do not require the user to restate repository, branch, paths, ports, or setup instructions on each turn.
 
@@ -33,18 +48,8 @@ Do not require the user to restate repository, branch, paths, ports, or setup in
 - Codex owns the user's local Linux checkout, launcher, local verification, and machine-specific troubleshooting.
 - Codex may edit game code when `NEXT_MOVE.md` explicitly assigns it a code task or when the user directly asks Codex to fix something.
 - Do not create ZIP-based update workflows.
-- Do not create duplicate project copies unless the user explicitly asks.
+- Do not create duplicate project copies.
 - Do not guess filesystem paths.
-
-## Permanent local model
-
-Use one persistent Git clone only.
-
-Repository:
-`https://github.com/shortview231/Casino_Card-game.git`
-
-Branch:
-`capture-11-rebuild-v0.1`
 
 ## Standard commands
 
