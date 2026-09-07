@@ -1,5 +1,7 @@
 import type { GameModule, MountedGame } from '../../engine/contracts';
 import { chooseCpuMove } from './ai';
+import { renderBuildContents } from './buildRenderer';
+import { Capture11PlaytestRecorder, copyPlaytestLog } from './debug';
 import {
   applyMove,
   beginNextHand,
@@ -78,6 +80,7 @@ export const capture11: GameModule = {
 
   mount(root, services): MountedGame {
     let state = createMatch(services.seed);
+    const recorder = new Capture11PlaytestRecorder(services.seed, state);
     let selectedHandCardId: string | null = null;
     const selectedBoard = new Set<string>();
     let cpuTimer: number | null = null;
@@ -97,20 +100,61 @@ export const capture11: GameModule = {
       return button;
     };
 
+    const makeDiagnostics = (): HTMLDetailsElement => {
+      const diagnostics = document.createElement('details');
+      diagnostics.className = 'playtest-diagnostics';
+
+      const invariant = recorder.invariant(state);
+      const summary = document.createElement('summary');
+      summary.textContent = `Playtest · seed ${recorder.matchSeed} · ${invariant.ok ? '52 cards OK' : 'CARD ERROR'}`;
+
+      const info = document.createElement('div');
+      info.className = 'playtest-diagnostics-body';
+
+      const seed = document.createElement('p');
+      seed.innerHTML = `Match seed: <strong>${recorder.matchSeed}</strong> · Hand seed: <strong>${state.seed}</strong> · Hand: <strong>${state.handNumber}</strong>`;
+
+      const status = document.createElement('p');
+      status.className = invariant.ok ? 'invariant-ok' : 'invariant-error';
+      status.textContent = invariant.message;
+
+      const copy = makeButton('Copy playtest log', () => {
+        void copyPlaytestLog(recorder.exportText()).then((copied) => {
+          copy.textContent = copied ? 'Playtest log copied' : 'Copy failed · select log below';
+        });
+      }, 'quiet-action');
+
+      const log = document.createElement('textarea');
+      log.className = 'playtest-log';
+      log.readOnly = true;
+      log.rows = 7;
+      log.setAttribute('aria-label', 'Capture 11 playtest log');
+      log.value = recorder.exportText();
+
+      info.append(seed, status, copy, log);
+      diagnostics.append(summary, info);
+      return diagnostics;
+    };
+
+    const applyRecordedMove = (player: PlayerId, move: Capture11Move) => {
+      state = applyMove(state, player, move);
+      recorder.recordMove(player, move, state);
+    };
+
     const scheduleCpu = () => {
       if (destroyed || state.phase !== 'playing' || state.turn !== 'player2' || cpuTimer !== null) return;
       const delay = services.preferences.reducedMotion ? 0 : 420;
       cpuTimer = window.setTimeout(() => {
         cpuTimer = null;
         if (destroyed || state.phase !== 'playing' || state.turn !== 'player2') return;
-        state = applyMove(state, 'player2', chooseCpuMove(state));
+        applyRecordedMove('player2', chooseCpuMove(state));
         clearSelection();
         render();
       }, delay);
     };
 
     const playMove = (move: Capture11Move) => {
-      state = applyMove(state, 'player1', move);
+      applyRecordedMove('player1', move);
       clearSelection();
       render();
     };
@@ -170,11 +214,13 @@ export const capture11: GameModule = {
       } else {
         panel.append(makeButton('Deal next hand', () => {
           state = beginNextHand(state);
+          recorder.recordNextHand(state);
           clearSelection();
           render();
         }, 'primary-action'));
       }
 
+      panel.append(makeDiagnostics());
       root.append(panel);
     };
 
@@ -260,13 +306,7 @@ export const capture11: GameModule = {
           button.textContent = cardText(item.card);
           button.setAttribute('aria-label', `${cardText(item.card)} on board`);
         } else {
-          const target = document.createElement('strong');
-          target.textContent = `BUILD ${item.target}`;
-          const cards = document.createElement('span');
-          cards.textContent = item.cards.map(cardText).join(' + ');
-          const detail = document.createElement('small');
-          detail.textContent = `${item.mode === 'paired' ? 'LOCKED' : 'OPEN'} · ${ownerName(item.createdBy)}`;
-          button.append(target, cards, detail);
+          renderBuildContents(button, item, ownerName(item.createdBy));
           button.setAttribute('aria-label', buildDescription(item));
         }
         button.addEventListener('click', () => {
@@ -358,7 +398,7 @@ export const capture11: GameModule = {
         <p>Scoring: each Ace 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3. A tie for a category scores nobody. First to 11 match points wins.</p>`;
       rules.append(summary, rulesText);
 
-      shell.append(header, meta, live, table, actionPanel, rules);
+      shell.append(header, meta, live, table, actionPanel, rules, makeDiagnostics());
       root.append(shell);
       scheduleCpu();
     };
