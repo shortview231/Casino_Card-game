@@ -123,3 +123,37 @@ The engine rejects the combined selection as illegal instead of offering the cap
 - Additional unit coverage confirms a played 7 captures BUILD 7 plus loose `3 + 4`, making the fix value-independent.
 - Chromium desktop and mobile coverage uses deterministic seed `1848` to form BUILD 10, select it with loose `9 + A`, expose the combined-capture action, and collect all five cards through the actual game controls.
 - The fix remains pending Robert's confirmation in the redeployed itch.io build.
+
+## BUG-003 — Mobile layout loads but is effectively unplayable
+
+- **Status:** OPEN — MOBILE PLAYABILITY BLOCKER
+- **Found:** 2026-09-07
+- **Environment:** live itch.io HTML5 build on a phone/mobile browser
+- **Deployed game commit:** `9f1df190f69a6fe0bfc5ce5cf8c0f57743bb6214`
+- **Reporter:** Robert Sory
+- **Severity:** Release blocker for mobile
+
+### What happened
+
+The live game successfully launches on mobile, so the HTML5 build is technically compatible with a phone browser. Once gameplay opens, however, the mobile presentation is not practically usable.
+
+Robert reported:
+
+- the game appears excessively zoomed/cropped on the phone
+- the full gameplay surface and controls cannot be reached comfortably
+- normal page scrolling does not expose the missing portions of the interface
+- the result is effectively impossible to play even though the game itself loaded
+
+### Expected behavior
+
+A phone user should be able to open the same Capture 11 URL, enter gameplay, see readable cards and state, select cards/builds by touch, reach the available turn actions, and move through an entire match without needing desktop mode or an orientation workaround.
+
+The mobile layout may reorganize the desktop cockpit into a single-column/stacked experience, but it must preserve the approved visual language and low-vision readability rather than simply shrinking the desktop UI until it fits.
+
+### Investigation notes
+
+- `index.html` already contains `width=device-width, initial-scale=1.0`, so do not assume a missing viewport meta tag is the cause.
+- Current CSS switches to a stacked mobile layout at `46rem` and to another layout at `32rem`.
+- At `32rem`, `.right-rail` changes to `display: flex` without an explicit column direction; inspect whether this creates horizontal expansion or contributes to the zoom/crop failure.
+- Do not rely on the outer itch.io page to provide scrolling. If gameplay can exceed the mobile viewport, Capture 11 itself must provide a reliable touch-scrollable path to every required control.
+- Preserve desktop behavior while fixing mobile.
