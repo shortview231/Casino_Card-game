@@ -44,8 +44,8 @@ export interface LooseBoardCard {
  *
  * open: may be legally raised when the acting player can satisfy the new
  * declared target under Capture 11 rules.
- * paired: a same-rank/value build whose declared target is fixed and may not
- * be raised. This preserves the family rule described for paired builds.
+ * paired: two or more card groups that each equal the declared target. The
+ * target is fixed, but later complete target-sized groups may be added.
  */
 export interface NumericBuild {
   readonly kind: 'build';

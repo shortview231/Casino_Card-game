@@ -7,6 +7,7 @@ import {
   applyMove,
   beginNextHand,
   createMatch,
+  legalMoves,
   movesForExactSelection,
   type Capture11Move,
   type Capture11State,
@@ -23,7 +24,7 @@ function ownerName(player: PlayerId): string { return player === 'player1' ? 'Yo
 function boardKey(item: BoardItem): string { return item.kind === 'loose' ? `loose:${item.card.id}` : `build:${item.id}`; }
 
 function actionLabel(move: Capture11Move, state: Capture11State): string {
-  if (move.type === 'trail') return 'Trail card';
+  if (move.type === 'trail') return 'Play selected card to table';
   if (move.type === 'capture-loose') return `Capture ${move.cardIds.length} board card${move.cardIds.length === 1 ? '' : 's'}`;
   if (move.type === 'capture-build') {
     const build = state.board.find((item) => item.kind === 'build' && item.id === move.buildId);
@@ -31,6 +32,7 @@ function actionLabel(move: Capture11Move, state: Capture11State): string {
   }
   if (move.type === 'build-open') return `Build ${move.target}`;
   if (move.type === 'build-paired') return `Lock paired ${move.target}`;
+  if (move.type === 'extend-paired') return `Add another ${move.target} group`;
   return `Burn build → ${move.target}`;
 }
 
@@ -120,9 +122,9 @@ export const capture11: GameModule = {
     const render = () => {
       if (destroyed) return; if (state.phase !== 'playing') { renderScoreScreen(); return; }
       root.replaceChildren(); const shell = document.createElement('div'); shell.className = 'capture11';
-      const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); const heading = document.createElement('h1'); heading.textContent = 'Capture 11'; const subtitle = document.createElement('p'); subtitle.textContent = `Hand ${state.handNumber} · First to 11`; titleWrap.append(heading, subtitle);
+      const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); titleWrap.className = 'capture11-brand'; const heading = document.createElement('h1'); heading.innerHTML = 'CAPTURE <strong>11</strong>'; const subtitle = document.createElement('p'); subtitle.textContent = 'STRATEGY · RISK · BIG PLAYS'; titleWrap.append(heading, subtitle);
       const matchScore = document.createElement('div'); matchScore.className = 'match-score'; matchScore.setAttribute('aria-label', `Match score. You ${state.players.player1.matchScore}. CPU ${state.players.player2.matchScore}.`); matchScore.innerHTML = `<span>You <strong>${state.players.player1.matchScore}</strong></span><span>CPU <strong>${state.players.player2.matchScore}</strong></span>`; header.append(titleWrap, matchScore);
-      const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>Dealer: <strong>${ownerName(state.dealer)}</strong></span><span>Turn: <strong>${ownerName(state.turn)}</strong></span><span>Deck: <strong>${state.deck.length}</strong></span><span>Captured: <strong>${state.players.player1.captured.length} / ${state.players.player2.captured.length}</strong></span>`;
+      const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>HAND <strong>${state.handNumber}</strong></span><span>DEALER <strong>${ownerName(state.dealer)}</strong></span><span>TURN <strong>${ownerName(state.turn)}</strong></span><span>DECK <strong>${state.deck.length}</strong></span>`;
       const suitKey = document.createElement('p'); suitKey.className = 'suit-key';
       for (const [className, text] of [
         ['suit-spades', 'S ♠ Spades'],
@@ -135,14 +137,14 @@ export const capture11: GameModule = {
         suit.textContent = text;
         suitKey.append(suit);
       }
-      const live = document.createElement('p'); live.className = 'last-action'; live.setAttribute('aria-live', 'polite'); live.textContent = state.lastAction;
+      const live = document.createElement('section'); live.className = 'last-action'; live.setAttribute('aria-live', 'polite'); live.innerHTML = `<strong>GAME STATUS</strong><span>${state.lastAction}</span>`;
       const table = document.createElement('section'); table.className = 'card-table'; table.setAttribute('aria-label', 'Capture 11 card table');
 
-      const cpuArea = document.createElement('div'); cpuArea.className = 'player-area cpu-area'; const cpuLabel = document.createElement('h2'); cpuLabel.textContent = `CPU hand · ${state.players.player2.hand.length} cards`; const cpuHand = document.createElement('div'); cpuHand.className = 'cpu-hand';
+      const cpuArea = document.createElement('div'); cpuArea.className = 'player-area cpu-area'; const cpuLabel = document.createElement('h2'); cpuLabel.innerHTML = `<span>CPU</span><small>${state.players.player2.hand.length} cards · ${state.players.player2.captured.length} captured</small>`; const cpuHand = document.createElement('div'); cpuHand.className = 'cpu-hand';
       for (let i = 0; i < state.players.player2.hand.length; i += 1) { const back = document.createElement('span'); back.className = 'card-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '◆'; cpuHand.append(back); }
-      cpuArea.append(cpuLabel, cpuHand); const playToShow = cpuPreview ?? lastCpuPlay; if (playToShow) cpuArea.append(makeCpuPlayPanel(playToShow, cpuPreview !== null));
+      cpuArea.append(cpuLabel, cpuHand); const playToShow = cpuPreview ?? lastCpuPlay; const cpuPlayPanel = playToShow ? makeCpuPlayPanel(playToShow, cpuPreview !== null) : null; if (cpuPlayPanel && cpuPreview) cpuArea.append(cpuPlayPanel);
 
-      const boardArea = document.createElement('div'); boardArea.className = 'board-area'; const boardHeading = document.createElement('h2'); boardHeading.textContent = `Board · ${state.board.length} items`; const boardGrid = document.createElement('div'); boardGrid.className = 'board-grid';
+      const boardArea = document.createElement('div'); boardArea.className = 'board-area'; const boardHeading = document.createElement('h2'); boardHeading.innerHTML = `<span>TABLE</span><small>${state.board.length} available item${state.board.length === 1 ? '' : 's'}</small>`; const boardGrid = document.createElement('div'); boardGrid.className = 'board-grid';
       if (state.board.length === 0) { const empty = document.createElement('p'); empty.textContent = 'Board is clear.'; boardGrid.append(empty); }
       for (const item of state.board) {
         const key = boardKey(item); const selected = selectedBoard.has(key); const button = document.createElement('button'); button.type = 'button'; button.className = item.kind === 'loose' ? `playing-card board-card ${cardColorClass(item.card)}` : `build-card ${item.mode}`; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1';
@@ -152,17 +154,35 @@ export const capture11: GameModule = {
       }
       boardArea.append(boardHeading, boardGrid);
 
-      const humanArea = document.createElement('div'); humanArea.className = 'player-area human-area'; const handHeading = document.createElement('h2'); handHeading.textContent = 'Your hand'; const hand = document.createElement('div'); hand.className = 'human-hand';
+      const humanArea = document.createElement('div'); humanArea.className = 'player-area human-area'; const handHeading = document.createElement('h2'); handHeading.innerHTML = `<span>YOUR HAND</span><small>${state.players.player1.hand.length} cards · ${state.players.player1.captured.length} captured</small>`; const hand = document.createElement('div'); hand.className = 'human-hand';
       for (const card of state.players.player1.hand) { const selected = selectedHandCardId === card.id; const button = document.createElement('button'); button.type = 'button'; button.className = `playing-card hand-card ${cardColorClass(card)}`; button.classList.toggle('selected', selected); button.textContent = cardText(card); button.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit]} in your hand`); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1'; button.addEventListener('click', () => { selectedHandCardId = selected ? null : card.id; selectedBoard.clear(); render(); }); hand.append(button); }
       humanArea.append(handHeading, hand); table.append(cpuArea, boardArea, humanArea);
 
-      const actionPanel = document.createElement('section'); actionPanel.className = 'action-panel'; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'Move'; actionPanel.append(actionHeading);
+      const actionPanel = document.createElement('section'); actionPanel.className = 'action-panel'; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'TURN OPTIONS'; actionPanel.append(actionHeading);
       if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
-      else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to see legal moves.'; actionPanel.append(help); }
-      else { const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]); if (exactMoves.length === 0) { const invalid = document.createElement('p'); invalid.textContent = 'No legal action for that exact selection. Change the board selection, or clear it to trail the card.'; actionPanel.append(invalid); } else { const actions = document.createElement('div'); actions.className = 'action-buttons'; for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : '')); actionPanel.append(actions); } if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action')); }
+      else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to capture, build, or play the card to the table.'; actionPanel.append(help); const selectPrompt = makeButton('Select a hand card', () => {}, 'quiet-action'); selectPrompt.disabled = true; actionPanel.append(selectPrompt); }
+      else {
+        const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]);
+        const trailMove = legalMoves(state, 'player1').find((move) => move.handCardId === selectedHandCardId && move.type === 'trail');
+        const actions = document.createElement('div'); actions.className = 'action-buttons';
+        if (exactMoves.length === 0) {
+          const invalid = document.createElement('p'); invalid.textContent = 'Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.'; actionPanel.append(invalid);
+        } else {
+          for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : ''));
+        }
+        if (selectedBoard.size > 0 && trailMove) actions.append(makeButton(actionLabel(trailMove, state), () => playMove(trailMove)));
+        actionPanel.append(actions);
+        if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action'));
+        actionPanel.append(makeButton('Cancel card selection', () => { clearSelection(); render(); }, 'quiet-action'));
+      }
 
-      const rules = document.createElement('details'); rules.className = 'rules-help'; const summary = document.createElement('summary'); summary.textContent = 'Quick rules'; const rulesText = document.createElement('div'); rulesText.innerHTML = `<p>Capture loose numeric cards whose values add to the card you play. Face cards capture the same face rank.</p><p>To build, combine your played numeric card with board cards and declare a value you still hold in your hand. Open builds can be raised. Matching paired builds are locked against raises.</p><p>The last player to make a capture gets every card left on the board at the end of the hand.</p><p>Scoring: each Ace 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3. A tie for a category scores nobody. First to 11 match points wins.</p>`; rules.append(summary, rulesText);
-      shell.append(header, meta, suitKey, live, table, actionPanel, rules, makeDiagnostics()); root.append(shell); scheduleCpu();
+      const rules = document.createElement('details'); rules.className = 'rules-help'; rules.open = true; const summary = document.createElement('summary'); summary.textContent = 'GAME INFO'; const rulesText = document.createElement('div'); rulesText.innerHTML = `<p><strong>First to 11 points.</strong></p><p>Capture loose cards by matching faces or adding numeric cards to the value you play.</p><p>Locked builds may hold multiple groups equal to one target. Add complete groups while you still hold the pickup card.</p><p>Scoring: Aces 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3.</p>`; rules.append(summary, rulesText);
+
+      const handStatus = document.createElement('section'); handStatus.className = 'hand-status'; handStatus.innerHTML = `<h2>CURRENT HAND</h2><dl><div><dt>Hand</dt><dd>${state.handNumber}</dd></div><div><dt>Points</dt><dd>You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}</dd></div><div><dt>Status</dt><dd>${state.turn === 'player1' ? 'Your turn' : 'CPU turn'}</dd></div></dl>`;
+      const leftRail = document.createElement('aside'); leftRail.className = 'capture11-rail left-rail'; leftRail.append(header, suitKey, rules, makeDiagnostics());
+      const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta, table);
+      const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; rightRail.append(actionPanel); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
+      shell.append(leftRail, tableStage, rightRail); root.append(shell); scheduleCpu();
     };
 
     render();

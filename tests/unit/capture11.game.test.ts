@@ -4,6 +4,7 @@ import {
   applyMove,
   createMatch,
   legalMoves,
+  movesForExactSelection,
   type Capture11State,
 } from '../../src/games/capture11/game';
 import type { Card } from '../../src/games/capture11/model';
@@ -124,5 +125,63 @@ describe('Capture 11 match flow', () => {
     const locked = next.board.find((item) => item.kind === 'build');
     expect(locked?.kind).toBe('build');
     if (locked?.kind === 'build') expect(locked.mode).toBe('paired');
+  });
+
+  it('creates a locked 9 build from played 2 plus loose 7 and loose 9', () => {
+    const two = card('2', 'spades');
+    const seven = card('7', 'clubs');
+    const boardNine = card('9', 'diamonds');
+    const heldNine = card('9', 'hearts');
+    const state: Capture11State = {
+      ...buildScenario(),
+      board: [{ kind: 'loose', card: seven }, { kind: 'loose', card: boardNine }],
+      players: {
+        player1: { id: 'player1', hand: [two, heldNine], captured: [], matchScore: 0 },
+        player2: buildScenario().players.player2,
+      },
+    };
+
+    const moves = movesForExactSelection(
+      state,
+      'player1',
+      two.id,
+      [`loose:${seven.id}`, `loose:${boardNine.id}`],
+    );
+    const paired = moves.find((move) => move.type === 'build-paired' && move.target === 9);
+
+    expect(paired).toBeDefined();
+    const next = applyMove(state, 'player1', paired!);
+    const locked = next.board.find((item) => item.kind === 'build');
+    expect(locked).toMatchObject({ kind: 'build', target: 9, mode: 'paired' });
+    if (locked?.kind === 'build') expect(locked.cards).toHaveLength(3);
+  });
+
+  it('extends a locked 9 build with another 9 while retaining a pickup 9', () => {
+    const playedNine = card('9', 'spades');
+    const heldNine = card('9', 'hearts');
+    const locked: Extract<Capture11State['board'][number], { kind: 'build' }> = {
+      kind: 'build',
+      id: 'locked-9',
+      cards: [card('2', 'hearts'), card('7', 'clubs'), card('9', 'diamonds')],
+      target: 9,
+      mode: 'paired',
+      createdBy: 'player1',
+    };
+    const state: Capture11State = {
+      ...buildScenario(),
+      board: [locked],
+      players: {
+        player1: { id: 'player1', hand: [playedNine, heldNine], captured: [], matchScore: 0 },
+        player2: buildScenario().players.player2,
+      },
+    };
+
+    const move = movesForExactSelection(state, 'player1', playedNine.id, [`build:${locked.id}`])
+      .find((candidate) => candidate.type === 'extend-paired');
+
+    expect(move).toBeDefined();
+    const next = applyMove(state, 'player1', move!);
+    const extended = next.board.find((item) => item.kind === 'build');
+    if (extended?.kind === 'build') expect(extended.cards).toHaveLength(4);
   });
 });

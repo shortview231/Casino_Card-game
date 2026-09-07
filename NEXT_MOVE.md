@@ -1,73 +1,45 @@
 # Capture 11 Next Move
 
-## Current task: rebuild the game to the approved UI target
+## Visual authority
 
-The user rejected the presentation in commit `7691587` as visually worse than the intended product. Do not treat that layout as a completed visual direction.
-
-The authoritative visual target is stored in this repository at:
+The approved game-table reference remains:
 
 `docs/ui-reference/capture11-final-ui-goal.jpg`
 
-Open that image before editing. Use it as the primary reference for composition, hierarchy, proportions, chrome, table layout, and overall finished-product feel.
+Keep future game and menu work in this polished dark card-game design family. Do not replace functional DOM/CSS with the reference image as a background.
 
-## Required result
+## Completed
 
-Rebuild the live Capture 11 UI so it visibly approaches the reference image, while keeping the existing working rules engine and low-vision accessibility behavior.
+The current `capture-11-rebuild-v0.1` implementation includes:
 
-The game should have:
+- a dark three-column game cockpit with dominant teal felt, distinct CPU/table/player zones, side rails, large low-vision cards, readable builds, CPU reveal, and persistent last-play information
+- no invalid-selection dead end: a selected hand card can always be played to the table, cleared, or cancelled alongside legal contextual actions
+- corrected locked-build rules supporting multiple equal-target groups, including 2 + 7 paired with 9, plus later complete-group additions while a pickup card remains held
+- a reference-aligned main menu integrated from `capture11-main-menu-patch-v0.1`
+- one-line Capture 11 branding, four real scoring cards, coded-card deck stack, teal presentation table, scoring strip, and responsive desktop/mobile layouts
+- functional Play vs CPU, How to Play, Accessibility, Settings, Feedback, and Quit routes
+- Play vs CPU opens the current polished game and corrected rules engine
 
-- a polished dark desktop-card-game shell, not a white/flat web-form layout
-- branded Capture 11 area and left-side navigation
-- CPU status/hand/score zone across the top
-- a large central teal/green felt table as the dominant visual area
-- draw deck at the left of the table and discard pile at the right
-- clearly separated board cards centered on the felt
-- a dedicated player-hand zone below the table
-- bottom player status/score strip
-- right-side game information and turn-action panels
-- visible CPU captures and player scoring/status areas
-- strong panel framing, depth, borders, and restrained blue/red accent glow similar to the reference
-- readable card faces with familiar standard-card proportions
-- no giant empty felt area with tiny content clustered at the upper left
-- no full-width white status bars dominating the screen
-- no developer-test-page appearance
+Verified behavior:
 
-## Accessibility stays mandatory
+- `npm run typecheck` passed
+- `npm test` passed: 8 files, 46 tests
+- `npm run test:stress` passed: 1 file, 2 tests
+- `npm run build` passed
+- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/snap/bin/chromium npm run e2e` passed: 8 desktop/mobile tests
+- browser routes, feedback copying, settings persistence, keyboard operation, focus visibility, and accessibility scanning passed
+- Chromium comparison passed at default and 150% text scale without horizontal overflow or text collisions
+- deterministic Chromium deal 16071 created a locked BUILD 9 from 2 + 7 + 9 while two pickup 9s remained in hand
+- launcher remained on Capture 11's assigned port; port 8765 was untouched
 
-Do not sacrifice readability to imitate the reference.
+## Current task
 
-Keep or improve:
+Extend automated browser coverage for the in-game low-vision presentation and launcher path.
 
-- large readable card rank and suit
-- redundant suit cues, including suit letter + symbol; color may supplement but never replace them
-- clearly distinguishable suits
-- readable CPU played-card preview with full card name
-- persistent LAST CPU PLAY information after resolution
-- readable builds and captured cards
-- keyboard/touch/mouse operation
+Requirements:
 
-## Implementation rule
-
-Do not use the reference image itself as a background or fake screenshot. Recreate the layout with functional HTML/CSS/components using the real game state.
-
-This is a structural UI rebuild, not a few CSS token changes. It is acceptable to substantially reorganize Capture 11 markup and CSS as long as gameplay behavior and tests remain intact.
-
-## Verification
-
-Launch the permanent local checkout in actual Chromium and compare it side-by-side with `docs/ui-reference/capture11-final-ui-goal.jpg`.
-
-Do not report completion until a first glance clearly shows the same design family and layout structure as the reference:
-
-1. dark framed game shell
-2. left navigation
-3. top CPU zone
-4. central felt table
-5. board centered on table with deck/discard flanking it
-6. player hand below
-7. right action/info rail
-8. bottom player status area
-9. cards remain low-vision readable
-
-Run typecheck, tests, and build after the visual rebuild.
-
-When complete, show the user the actual browser result before moving to automated regression work.
+- verify `PLAY-CAPTURE11.sh` leaves a reachable server after the script exits without using or killing port 8765
+- verify large suit letter + symbol cues on table and hand cards
+- verify readable CPU preview and persistent LAST CPU PLAY states
+- add deterministic browser coverage for open and locked build rendering, including grouped locked builds
+- keep generated runtime/build/test artifacts out of Git

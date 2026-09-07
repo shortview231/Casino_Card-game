@@ -6,6 +6,7 @@ import {
   canCaptureLooseSelection,
   canCreateOpenBuild,
   canCreatePairedBuild,
+  canExtendPairedBuild,
   canRaiseOpenBuild,
 } from './rules';
 import { scoreHand, type HandScoreResult } from './scoring';
@@ -25,7 +26,8 @@ export type Capture11Move =
   | { readonly type: 'capture-loose'; readonly handCardId: string; readonly cardIds: readonly string[] }
   | { readonly type: 'capture-build'; readonly handCardId: string; readonly buildId: string }
   | { readonly type: 'build-open'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
-  | { readonly type: 'build-paired'; readonly handCardId: string; readonly cardId: string; readonly target: number }
+  | { readonly type: 'build-paired'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
+  | { readonly type: 'extend-paired'; readonly handCardId: string; readonly buildId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'raise-build'; readonly handCardId: string; readonly buildId: string; readonly target: number };
 
 function copyPlayers(state: Capture11State) {
@@ -225,20 +227,34 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       break;
     }
     case 'build-paired': {
-      const selected = looseByIds(board, [move.cardId])[0]!;
-      if (!canCreatePairedBuild(played, selected, remainingHand)) throw new Error('That paired build is not legal');
-      const target = numericBuildValue(played);
-      if (target === null || target !== move.target) throw new Error('Paired build target mismatch');
-      board = board.filter((item) => item !== selected);
+      const selected = looseByIds(board, move.cardIds);
+      if (!canCreatePairedBuild(played, selected, remainingHand, move.target)) throw new Error('That paired build is not legal');
+      const selectedIds = new Set(selected.map((item) => item.card.id));
+      board = board.filter((item) => item.kind !== 'loose' || !selectedIds.has(item.card.id));
       board.push({
         kind: 'build',
         id: newBuildId,
-        cards: [selected.card, played],
-        target,
+        cards: [...selected.map((item) => item.card), played],
+        target: move.target,
         mode: 'paired',
         createdBy: player,
       });
-      lastAction = `${player === 'player1' ? 'You lock' : 'CPU locks'} a paired ${target} build.`;
+      lastAction = `${player === 'player1' ? 'You lock' : 'CPU locks'} a paired ${move.target} build with ${selected.length + 1} cards.`;
+      break;
+    }
+    case 'extend-paired': {
+      const build = buildById(board, move.buildId);
+      const selected = looseByIds(board, move.cardIds);
+      if (build.target !== move.target || !canExtendPairedBuild(played, selected, build, remainingHand)) throw new Error('That locked-build extension is not legal');
+      const selectedIds = new Set(selected.map((item) => item.card.id));
+      board = board.filter((item) => item !== build && (item.kind !== 'loose' || !selectedIds.has(item.card.id)));
+      board.push({
+        ...build,
+        cards: [...build.cards, ...selected.map((item) => item.card), played],
+        mode: 'paired',
+        createdBy: player,
+      });
+      lastAction = `${player === 'player1' ? 'You add' : 'CPU adds'} another ${build.target} group to the locked build.`;
       break;
     }
     case 'raise-build': {
@@ -305,6 +321,41 @@ function subsetsForSum(cards: readonly LooseBoardCard[], target: number, limit =
   return results;
 }
 
+function pairedBuildSelections(
+  cards: readonly LooseBoardCard[],
+  played: Card,
+  remainingHand: readonly Card[],
+  target: number,
+  limit = 96,
+): LooseBoardCard[][] {
+  const candidates = cards.filter((item) => {
+    const value = numericBuildValue(item.card);
+    return value !== null && value <= target;
+  });
+  const results: LooseBoardCard[][] = [];
+  const chosen: LooseBoardCard[] = [];
+  let visited = 0;
+
+  const visit = (start: number) => {
+    // Human selections are validated directly; this bound only keeps CPU
+    // candidate discovery responsive on unusually crowded boards.
+    if (results.length >= limit || visited >= 8192) return;
+    visited += 1;
+    if (chosen.length > 0 && canCreatePairedBuild(played, chosen, remainingHand, target)) {
+      results.push([...chosen]);
+    }
+    for (let index = start; index < candidates.length; index += 1) {
+      chosen.push(candidates[index]!);
+      visit(index + 1);
+      chosen.pop();
+      if (results.length >= limit || visited >= 8192) return;
+    }
+  };
+
+  visit(0);
+  return results;
+}
+
 function uniqueMoves(moves: readonly Capture11Move[]): Capture11Move[] {
   const seen = new Set<string>();
   const result: Capture11Move[] = [];
@@ -351,6 +402,19 @@ export function legalMoves(state: Capture11State, player: PlayerId): Capture11Mo
       if (canRaiseOpenBuild(played, build, remaining, raisedTarget)) {
         moves.push({ type: 'raise-build', handCardId: played.id, buildId: build.id, target: raisedTarget });
       }
+      const neededForGroup = build.target - value;
+      const extensionSelections = neededForGroup === 0 ? [[]] : subsetsForSum(loose, neededForGroup, 24);
+      for (const selection of extensionSelections) {
+        if (canExtendPairedBuild(played, selection, build, remaining)) {
+          moves.push({
+            type: 'extend-paired',
+            handCardId: played.id,
+            buildId: build.id,
+            cardIds: selection.map((item) => item.card.id),
+            target: build.target,
+          });
+        }
+      }
     }
 
     const heldTargets = [...new Set(remaining.map(numericBuildValue).filter((target): target is number => target !== null))];
@@ -368,11 +432,13 @@ export function legalMoves(state: Capture11State, player: PlayerId): Capture11Mo
           }
         }
       }
-    }
-
-    for (const item of loose) {
-      if (canCreatePairedBuild(played, item, remaining)) {
-        moves.push({ type: 'build-paired', handCardId: played.id, cardId: item.card.id, target: value });
+      for (const selection of pairedBuildSelections(loose, played, remaining, target)) {
+        moves.push({
+          type: 'build-paired',
+          handCardId: played.id,
+          cardIds: selection.map((item) => item.card.id),
+          target,
+        });
       }
     }
   }
@@ -386,22 +452,46 @@ export function movesForExactSelection(
   handCardId: string,
   boardKeys: readonly string[],
 ): Capture11Move[] {
-  const allowed = legalMoves(state, player).filter((move) => move.handCardId === handCardId);
-  if (boardKeys.length === 0) return allowed.filter((move) => move.type === 'trail');
+  if (state.phase !== 'playing' || state.turn !== player) return [];
+  const played = getPlayedCard(state, player, handCardId);
+  const remaining = withoutHandCard(state.players[player].hand, handCardId);
+  if (boardKeys.length === 0) return [{ type: 'trail', handCardId }];
 
-  const selectedLoose = boardKeys.filter((key) => key.startsWith('loose:')).map((key) => key.slice(6)).sort();
-  const selectedBuilds = boardKeys.filter((key) => key.startsWith('build:')).map((key) => key.slice(6));
+  const looseIds = boardKeys.filter((key) => key.startsWith('loose:')).map((key) => key.slice(6));
+  const buildIds = boardKeys.filter((key) => key.startsWith('build:')).map((key) => key.slice(6));
+  const selectedLoose = looseByIds(state.board, looseIds);
+  const moves: Capture11Move[] = [];
 
-  return allowed.filter((move) => {
-    if (move.type === 'capture-loose' || move.type === 'build-open') {
-      return selectedBuilds.length === 0 && [...move.cardIds].sort().join('|') === selectedLoose.join('|');
+  if (buildIds.length === 0) {
+    if (canCaptureLooseSelection(played, selectedLoose)) {
+      moves.push({ type: 'capture-loose', handCardId, cardIds: looseIds });
     }
-    if (move.type === 'build-paired') {
-      return selectedBuilds.length === 0 && selectedLoose.length === 1 && move.cardId === selectedLoose[0];
+    const heldTargets = [...new Set(remaining.map(numericBuildValue).filter((target): target is number => target !== null))];
+    for (const target of heldTargets) {
+      if (canCreateOpenBuild(played, selectedLoose, remaining, target)) {
+        moves.push({ type: 'build-open', handCardId, cardIds: looseIds, target });
+      }
+      if (canCreatePairedBuild(played, selectedLoose, remaining, target)) {
+        moves.push({ type: 'build-paired', handCardId, cardIds: looseIds, target });
+      }
     }
-    if (move.type === 'capture-build' || move.type === 'raise-build') {
-      return selectedLoose.length === 0 && selectedBuilds.length === 1 && move.buildId === selectedBuilds[0];
+    return uniqueMoves(moves);
+  }
+
+  if (buildIds.length !== 1) return [];
+  const build = buildById(state.board, buildIds[0]!);
+  if (selectedLoose.length === 0 && canCaptureBuild(played, build)) {
+    moves.push({ type: 'capture-build', handCardId, buildId: build.id });
+  }
+  const playedValue = numericBuildValue(played);
+  if (selectedLoose.length === 0 && playedValue !== null) {
+    const raisedTarget = build.target + playedValue;
+    if (canRaiseOpenBuild(played, build, remaining, raisedTarget)) {
+      moves.push({ type: 'raise-build', handCardId, buildId: build.id, target: raisedTarget });
     }
-    return false;
-  });
+  }
+  if (canExtendPairedBuild(played, selectedLoose, build, remaining)) {
+    moves.push({ type: 'extend-paired', handCardId, buildId: build.id, cardIds: looseIds, target: build.target });
+  }
+  return uniqueMoves(moves);
 }

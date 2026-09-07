@@ -5,6 +5,7 @@ import {
   canCaptureLooseSelection,
   canCreateOpenBuild,
   canCreatePairedBuild,
+  canExtendPairedBuild,
   canRaiseOpenBuild,
 } from '../../src/games/capture11/rules';
 
@@ -83,11 +84,47 @@ describe('Capture 11 builds', () => {
 
   it('creates a paired 5 build only when another 5 remains in hand', () => {
     expect(
-      canCreatePairedBuild(card('5', 'hearts'), loose('5', 'clubs'), [card('5', 'diamonds')]),
+      canCreatePairedBuild(card('5', 'hearts'), [loose('5', 'clubs')], [card('5', 'diamonds')], 5),
     ).toBe(true);
     expect(
-      canCreatePairedBuild(card('5', 'hearts'), loose('5', 'clubs'), [card('8', 'diamonds')]),
+      canCreatePairedBuild(card('5', 'hearts'), [loose('5', 'clubs')], [card('8', 'diamonds')], 5),
     ).toBe(false);
+  });
+
+  it('locks 2 + 7 together with a loose 9 when another 9 remains in hand', () => {
+    expect(
+      canCreatePairedBuild(
+        card('2', 'spades'),
+        [loose('7', 'clubs'), loose('9', 'diamonds')],
+        [card('9', 'hearts')],
+        9,
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects selected cards that cannot be partitioned into target groups', () => {
+    expect(
+      canCreatePairedBuild(
+        card('2', 'spades'),
+        [loose('6', 'clubs'), loose('8', 'diamonds'), loose('2', 'hearts')],
+        [card('9', 'clubs')],
+        9,
+      ),
+    ).toBe(false);
+  });
+
+  it('adds another complete target group to an existing locked build', () => {
+    const paired: NumericBuild = {
+      kind: 'build',
+      id: 'paired-9',
+      cards: [card('2', 'hearts'), card('7', 'clubs'), card('9', 'diamonds')],
+      target: 9,
+      mode: 'paired',
+      createdBy: 'player1',
+    };
+
+    expect(canExtendPairedBuild(card('9', 'spades'), [], paired, [card('9', 'hearts')])).toBe(true);
+    expect(canExtendPairedBuild(card('2', 'spades'), [loose('7', 'hearts')], paired, [card('9', 'clubs')])).toBe(true);
   });
 
   it('does not allow paired builds to be raised as open builds', () => {

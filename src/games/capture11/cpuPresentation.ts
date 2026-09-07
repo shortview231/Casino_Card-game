@@ -68,6 +68,8 @@ export function describeCpuMove(state: Capture11State, move: Capture11Move): Cpu
       return { card, heading: `CPU plays ${cardName}`, detail: `Creates open BUILD ${move.target}.` };
     case 'build-paired':
       return { card, heading: `CPU plays ${cardName}`, detail: `Creates locked paired BUILD ${move.target}.` };
+    case 'extend-paired':
+      return { card, heading: `CPU plays ${cardName}`, detail: `Adds another ${move.target} group to the locked build.` };
     case 'raise-build': {
       const build = buildById(state, move.buildId);
       return {
