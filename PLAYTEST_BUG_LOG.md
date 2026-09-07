@@ -67,3 +67,62 @@ The engine accepts or recognizes the arithmetic group but rejects/omits the sepa
 - Compare the legal-move generation path for open builds versus paired/fixed builds when a loose board card exactly equals the target.
 - Capture the playtest seed/move log if convenient on the next occurrence.
 - Robert's family-rule description is authoritative for this bug log.
+
+## BUG-002 — Simultaneous locked-build + loose-value capture rejected
+
+- **Status:** OPEN — FIRST OBSERVATION
+- **Found:** 2026-09-07
+- **Environment:** itch.io embedded HTML5 build, external-site playtest
+- **Deployed game commit:** `e7718d76a649347e6aee2fb1e577edd1739f7f5d`
+- **Reporter:** Robert Sory
+- **Severity:** Gameplay / rules blocker
+
+### Visible state
+
+In hand 2, the player had a single `10♣` remaining in hand.
+
+The board visibly contained:
+
+- a **locked BUILD 10** containing `10♦` and `10♠`
+- loose `9♣`
+- loose `A♠`
+- loose `8♣`
+- loose `5♥`
+- loose `K♣`
+
+The selected objects were the player's `10♣`, the locked BUILD 10, `9♣`, and `A♠`.
+
+### Problem visible in the screenshot
+
+Both selected board groups independently match the played value 10:
+
+- locked BUILD 10 = `10`
+- loose `9♣ + A♠ = 10`
+
+The UI nevertheless displayed:
+
+> Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.
+
+### Why this appears different from BUG-001
+
+BUG-001 occurs while **forming or extending a paired/fixed build** when a loose card already equals the target.
+
+This observation occurs during a **capture attempt**. The build already exists and is already locked. The failure appears to be in selecting a matching build and an additional loose-card group that also equals the played card value during the same capture.
+
+The two bugs may ultimately share legal-selection code, but they are being tracked separately until the engine behavior is investigated.
+
+### Expected behavior to preserve for investigation
+
+Robert identified this board state as a problem during live playtesting. The apparent intended capture is for the played `10♣` to take the locked BUILD 10 and the separate `9♣ + A♠ = 10` group in the same play.
+
+### Actual behavior
+
+The engine rejects the combined selection as illegal instead of offering the capture.
+
+### Notes for later investigation
+
+- Do **not** fix yet.
+- Reproduce with another target value, for example a BUILD 7 plus loose `3 + 4`, while playing a 7.
+- Check whether the engine currently permits only one capture source type at a time: loose cards OR a build.
+- Compare `movesForExactSelection` / legal move generation for combined build and loose-card selections.
+- Keep BUG-002 separate from BUG-001 unless code investigation proves they are the same root cause.
