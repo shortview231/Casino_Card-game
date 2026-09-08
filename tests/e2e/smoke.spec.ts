@@ -210,3 +210,31 @@ test('landscape phone gameplay remains internally scrollable and width-contained
   await page.locator('.hand-card').first().scrollIntoViewIfNeeded();
   await expect(page.locator('.hand-card').first()).toBeInViewport();
 });
+
+test.describe('touch-host viewport fallback', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, hasTouch: true });
+
+  test('stacks gameplay and keeps the hand/action controls touch-reachable', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play vs CPU' }).click();
+
+    const touchLayout = await page.evaluate(() => ({
+      coarse: matchMedia('(pointer: coarse)').matches,
+      hoverNone: matchMedia('(hover: none)').matches,
+      display: getComputedStyle(document.querySelector('.capture11') ?? document.body).display,
+    }));
+    expect(touchLayout).toMatchObject({ coarse: true, hoverNone: true, display: 'flex' });
+    await expectGameOwnedScrolling(page);
+    await expectViewportWidthContained(page);
+
+    const hand = page.locator('.hand-card').first();
+    await hand.scrollIntoViewIfNeeded();
+    await expect(hand).toBeInViewport();
+    await hand.click();
+    const action = page.getByRole('button', { name: 'Play selected card to table' });
+    await action.scrollIntoViewIfNeeded();
+    await expect(action).toBeInViewport();
+    await action.click();
+    await expect(page.locator('.hand-card').first()).toBeDisabled();
+  });
+});

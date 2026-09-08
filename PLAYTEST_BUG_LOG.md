@@ -166,5 +166,6 @@ The mobile layout may reorganize the desktop cockpit into a single-column/stacke
 - Chromium interaction coverage at `390x844` creates a locked BUILD 7 through the real controls, scrolls to its action, advances the CPU turn, and checks global width containment.
 - Chromium interaction coverage at `360x800` selects a hand card, scrolls to and activates a legal trail action, and confirms normal turn advancement.
 - Additional checks cover `412x915`, `844x390` landscape, and `390x844` at 150% app text scale; all retain internal scrolling and no page-wide horizontal overflow.
+- A touch-host regression uses a `1280x800` CSS viewport with coarse pointer input to reproduce the embedded-host failure mode; the game now switches to the stacked flow, scrolls to the hand, exposes the action, and advances the turn.
 - Desktop Chromium inspection at `1280x800` confirms the existing three-column cockpit and desktop action rail remain active.
 - The fix remains pending Robert's confirmation on the redeployed itch.io build using a real phone.

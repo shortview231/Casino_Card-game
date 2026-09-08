@@ -405,7 +405,9 @@ html[data-contrast='high'] .build-card { background: #fff; color: #000; border-c
   .right-rail { grid-column: 2; }
 }
 
-@media (max-width: 46rem) {
+/* Some mobile HTML5 hosts expose a desktop-sized CSS viewport inside the game frame.
+   The coarse-pointer fallback keeps touch devices on the playable stacked layout. */
+@media (max-width: 46rem), (pointer: coarse) and (hover: none) {
   .game-screen {
     height: calc(100dvh - 1.5rem);
     min-height: 0;
