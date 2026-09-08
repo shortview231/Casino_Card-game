@@ -169,3 +169,34 @@ The mobile layout may reorganize the desktop cockpit into a single-column/stacke
 - A touch-host regression uses a `1280x800` CSS viewport with coarse pointer input to reproduce the embedded-host failure mode; the game now switches to the stacked flow, scrolls to the hand, exposes the action, and advances the turn.
 - Desktop Chromium inspection at `1280x800` confirms the existing three-column cockpit and desktop action rail remain active.
 - The fix remains pending Robert's confirmation on the redeployed itch.io build using a real phone.
+
+## BUG-004 — Matching played rank captures only one of multiple loose matching cards
+
+- **Status:** OPEN — REPORTED, DO NOT AUTO-FIX
+- **Found:** 2026-09-08
+- **Environment:** live itch.io HTML5 build on Robert's phone
+- **Reporter:** Robert Sory
+- **Severity:** Gameplay rules bug, non-blocking
+
+### Reproduction
+
+- Player has an `8` in hand.
+- Board contains two separate loose `8` cards.
+- Player plays the `8` and attempts to capture both loose `8`s in the same move.
+- The game only permits one of the two board `8`s to be captured.
+
+This can occur naturally from the opening deal, so it is uncommon but not exotic.
+
+### Expected behavior
+
+A matching played card should be able to capture all independently matching loose cards selected for that play when each selected card is a legal same-rank/value capture group.
+
+For the reproduced example, the played `8` should be able to collect both loose board `8`s, resulting in all three 8s entering the player's captured pile.
+
+### Actual behavior
+
+The engine/UI only allows one matching loose `8` to be selected/captured with the played `8`, leaving the other loose `8` on the board.
+
+### Investigation note
+
+Track this separately from BUG-002 until proven otherwise. It may share the same underlying multi-group capture logic, but this failure involves multiple independent same-value loose cards rather than a locked build plus an arithmetic loose-card group.
