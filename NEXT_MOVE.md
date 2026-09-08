@@ -8,7 +8,7 @@ The approved desktop game-table reference remains:
 
 `docs/ui-reference/capture11-final-ui-goal.jpg`
 
-Preserve the polished desktop cockpit and the mobile playability work deployed from commit `674889fdb86f387240377383154fb22b896d7c5b`.
+Preserve the polished desktop cockpit and the mobile playability work deployed from commit `2358c296fcbd04dcbd5104d85333affe14a1364a`.
 
 ## Current task: contextual first-turn guidance only
 
