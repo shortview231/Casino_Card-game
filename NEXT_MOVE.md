@@ -1,135 +1,71 @@
 # Capture 11 Next Move
 
-## Visual authority
+## Source of truth
+
+Read `ONBOARDING_TUTORIAL_PLAN.md` and `PLAYTEST_NOTES.md` before editing.
 
 The approved desktop game-table reference remains:
 
 `docs/ui-reference/capture11-final-ui-goal.jpg`
 
-Preserve the current polished dark card-game visual language. This task is a **mobile usability adaptation**, not a desktop redesign and not a generic responsive shrink pass.
+Preserve the polished desktop cockpit and the mobile playability work deployed from commit `674889fdb86f387240377383154fb22b896d7c5b`.
 
-## Current task: make the live Capture 11 game genuinely playable on phones
+## Current task: contextual first-turn guidance only
 
-Read `PLAYTEST_BUG_LOG.md` first, especially **BUG-003**.
+Implement **Layer 1: first-turn contextual guidance** from `ONBOARDING_TUTORIAL_PLAN.md` inside normal Play vs CPU.
 
-Robert verified that the itch.io build launches on mobile, but gameplay is effectively unusable because the phone presentation appears overly zoomed/cropped and the missing gameplay/control areas cannot be reached through normal scrolling.
+Do not implement the separate Guided Tutorial mode in this task. That is the next layer after contextual guidance is verified.
 
-The goal is not merely to make automated mobile screenshots pass. The goal is for a real phone user to be able to complete a Capture 11 match by touch.
+### Required behavior
 
-## Root-cause audit before editing
+1. On a new player's first normal match, show a compact helper adjacent to the active gameplay area.
+2. Before card selection, clearly say: `1. Pick a card from your hand.`
+3. After a hand card is selected, clearly say: `2. Select cards on the table that your card can take, or choose an available build.`
+4. When a legal action is available, clearly say: `3. Choose the highlighted action to finish your move.`
+5. Keep this clarification visible in the helper: `11 is the match score to win. Your individual plays do not need to add to 11.`
+6. Provide a **Show me** or **Hint** control that points to one legal next interaction without automatically playing a card or action.
+7. Provide a **Hide tips** control. Persist that preference so experienced players are not forced through guidance on later visits.
+8. Preserve invalid-selection recovery and explain the next valid step in plain language.
+9. Do not hide illegal cards. Use a clear non-color-only cue for suggested/legal next choices.
+10. Keep the normal Play vs CPU flow immediate; do not add a blocking modal.
 
-Reproduce the current failure in Chromium using real phone-sized viewports, at minimum:
+### Mobile and accessibility requirements
 
-- `360x800`
-- `390x844`
-- `412x915`
-- one landscape phone viewport such as `844x390`
+- The helper and hint must use the corrected game-owned mobile scroller.
+- At `360x800`, `390x844`, `412x915`, and `390x844` with 150% app text, guidance, cards, and actions must remain reachable with no page-wide horizontal overflow.
+- The helper must not cover the board, hand, CPU preview, or actions.
+- Preserve keyboard focus, high contrast, reduced motion, and screen-reader labels/live behavior.
+- Suggested targets must use text or another semantic cue in addition to color.
 
-Inspect the actual rendered width/height, horizontal overflow, scroll containers, sticky/fixed elements, and touch reachability.
+### Guardrails
 
-Important known facts:
+- Do not change Capture 11 rules, scoring, dealing, CPU difficulty, or AI strategy.
+- Do not redesign the desktop table or main menu.
+- Do not implement Guided Tutorial lessons yet.
+- Keep BUG-001 and BUG-002 regressions green.
+- Keep BUG-003 at `FIXED IN CODE — PENDING REAL DEVICE / ITCH.IO RECHECK` until Robert tests the deployed build on a real phone.
+- Keep port `8765` untouched.
 
-- `index.html` already has `width=device-width, initial-scale=1.0`; do not add duplicate viewport metadata.
-- `src/games/capture11/capture11.css` switches to stacked layout below `46rem`.
-- below `32rem`, `.right-rail` currently becomes `display: flex` without an explicit column direction. Verify whether this is forcing horizontal expansion or contributing to the zoom/crop issue.
-- do not assume the outer itch.io page will provide scrolling. The game must remain usable when hosted inside a constrained/fullscreen mobile HTML5 viewport.
+## Required tests
 
-## Mobile interaction and layout requirements
+Add focused unit/browser coverage for:
 
-Implement the smallest coherent mobile redesign needed to satisfy all of these:
+- helper step transitions from hand selection to board/action guidance
+- Hint/Show me identifies a legal next interaction without playing it
+- Hide tips persists across reload and can be restored from Settings or an equally discoverable existing preference surface
+- keyboard operation and semantic/non-color-only suggested-target cues
+- normal and 150% mobile reachability/width containment
+- existing mobile, BUG-001, BUG-002, menu, and accessibility paths remain green
 
-1. **No page-wide horizontal overflow.** At supported phone widths, the Capture 11 gameplay surface must fit the viewport width.
-2. **Reliable touch scrolling.** If the complete game is taller than the phone viewport, the game itself must provide a normal vertical touch-scroll path to every required area. No trapped viewport and no inaccessible bottom controls.
-3. **Readable, not microscopic.** Do not solve the problem by scaling the entire desktop UI down. Cards, rank/suit cues, score, selected states, and action labels must remain readable for low-vision users.
-4. **Playable ordering.** Mobile should prioritize the gameplay loop. A player must be able to reach CPU state, board, own hand, and legal turn actions without hunting through decorative/informational panels. Reorder panels on mobile if necessary while preserving desktop placement.
-5. **Four-card hand is usable by touch.** All four possible hand cards must fit/wrap cleanly, remain individually tappable, and never force global horizontal scrolling.
-6. **Board selections and builds are usable.** Loose cards, open builds, locked builds, and large grouped builds must remain selectable/readable. A build may use its own contained horizontal scrolling when necessary, but the whole game may not become horizontally scrollable.
-7. **Action controls stay reachable.** After selecting a hand card or board cards/builds, the available action button(s) must be reachable by touch without changing browser zoom or switching to desktop mode.
-8. **CPU preview does not block play.** The CPU reveal/last-play presentation must fit or stack on mobile without covering the board or trapping scrolling.
-9. **Menu remains functional.** Main menu, How to Play, Accessibility, and Play vs CPU must remain usable on the same phone widths.
-10. **Portrait first, landscape still usable.** Portrait is the priority; landscape must at least remain scrollable and playable rather than clipped.
+Run the full repository verification suite and inspect real Chromium screenshots at desktop and phone sizes before reporting success.
 
-## Accessibility requirements
+## Completion
 
-- preserve visible keyboard focus for desktop/tablet users
-- preserve high-contrast mode and reduced-motion behavior
-- keep touch targets at least the existing practical button/card sizes where possible
-- verify at the normal text scale and at the app's 150% text scale that required controls remain reachable; controlled vertical growth is acceptable, global horizontal overflow is not
-- do not disable browser pinch zoom
+When verified:
 
-## Desktop regression guardrail
+1. commit and push to `capture-11-rebuild-v0.1`
+2. update the relevant playtest/product notes with exact verification
+3. trigger and watch `.github/workflows/deploy-itch.yml` using the existing `robert-sory/capture-11` / `html5` target if GitHub Actions authentication permits
+4. report the pushed SHA and workflow result
 
-The current desktop itch.io presentation is approved and must remain intact.
-
-Verify at minimum:
-
-- `1280x800` desktop gameplay still uses the current three-column cockpit
-- desktop card sizes and approved visual hierarchy do not regress
-- BUG-001 and BUG-002 regression tests remain green
-- scoring, CPU strategy, rules, builds, diagnostics, and menu behavior are unchanged unless directly required for mobile layout
-
-Do **not** change AI difficulty in this task.
-Do **not** change Capture 11 family rules in this task.
-Do **not** redesign the desktop UI.
-Keep port `8765` untouched.
-
-## Required browser acceptance test
-
-Add Playwright coverage that does more than assert elements exist.
-
-At a phone viewport, drive the game through the real controls and verify:
-
-- menu opens and Play vs CPU starts gameplay
-- document/gameplay width does not exceed viewport width beyond normal rounding tolerance
-- the page/game container can scroll vertically when content is taller than the viewport
-- player can tap a hand card
-- player can reach and tap a legal action
-- after the action, gameplay advances normally
-- action controls and player hand are reachable through actual scrolling
-- open/locked build rendering does not create global horizontal overflow
-
-Run at least one complete deterministic mobile interaction path at `390x844` and a second width such as `360x800` or `412x915`.
-
-## Verification
-
-Run the full existing suite, including at minimum:
-
-- `npm run typecheck`
-- `npm test`
-- `npm run test:stress`
-- `npm run build`
-- full Playwright e2e/browser/accessibility suite
-
-Then inspect the result in a real Chromium mobile viewport, not only test assertions.
-
-## Bug journal update
-
-If the mobile acceptance criteria pass locally, update BUG-003 to:
-
-`FIXED IN CODE — PENDING REAL DEVICE / ITCH.IO RECHECK`
-
-Record the viewport sizes and interactive checks used. Do not mark it fully VERIFIED until Robert confirms the redeployed game on his actual phone.
-
-## Commit, push, and redeploy
-
-When all verification passes:
-
-1. commit the mobile fix, tests, and bug-log update
-2. push to `capture-11-rebuild-v0.1`
-3. report the exact pushed SHA
-4. trigger the existing `.github/workflows/deploy-itch.yml` workflow in the same run if GitHub Actions authentication permits it
-
-Deployment parameters remain:
-
-- ref: `capture-11-rebuild-v0.1`
-- `itch_target`: `robert-sory/capture-11`
-- `channel`: `html5`
-- `confirm`: `DEPLOY`
-
-If Actions permission is available, run the equivalent of:
-
-`gh workflow run deploy-itch.yml --ref capture-11-rebuild-v0.1 -f itch_target=robert-sory/capture-11 -f channel=html5 -f confirm=DEPLOY`
-
-Then watch the deployment through completion and report the result.
-
-If authentication cannot trigger the workflow, stop after the verified push and report that clearly. Do not alter credentials, create another itch.io project, or expose `BUTLER_API_KEY`.
+Do not expose credentials or create another itch.io project.
