@@ -106,6 +106,27 @@ export const capture11: GameModule = {
 
     const playMove = (move: Capture11Move) => { applyRecordedMove('player1', move); clearSelection(); render(); };
 
+    const makeActionPanel = (placementClass: string): HTMLElement => {
+      const actionPanel = document.createElement('section'); actionPanel.className = `action-panel ${placementClass}`; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'TURN OPTIONS'; actionPanel.append(actionHeading);
+      if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
+      else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to capture, build, or play the card to the table.'; actionPanel.append(help); const selectPrompt = makeButton('Select a hand card', () => {}, 'quiet-action'); selectPrompt.disabled = true; actionPanel.append(selectPrompt); }
+      else {
+        const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]);
+        const trailMove = legalMoves(state, 'player1').find((move) => move.handCardId === selectedHandCardId && move.type === 'trail');
+        const actions = document.createElement('div'); actions.className = 'action-buttons';
+        if (exactMoves.length === 0) {
+          const invalid = document.createElement('p'); invalid.textContent = 'Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.'; actionPanel.append(invalid);
+        } else {
+          for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : ''));
+        }
+        if (selectedBoard.size > 0 && trailMove) actions.append(makeButton(actionLabel(trailMove, state), () => playMove(trailMove)));
+        actionPanel.append(actions);
+        if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action'));
+        actionPanel.append(makeButton('Cancel card selection', () => { clearSelection(); render(); }, 'quiet-action'));
+      }
+      return actionPanel;
+    };
+
     const renderScoreScreen = () => {
       root.replaceChildren(); const score = state.lastHandScore; if (!score) return;
       const panel = document.createElement('section'); panel.className = 'capture11-score-screen';
@@ -157,32 +178,14 @@ export const capture11: GameModule = {
 
       const humanArea = document.createElement('div'); humanArea.className = 'player-area human-area'; const handHeading = document.createElement('h2'); handHeading.innerHTML = `<span>YOUR HAND</span><small>${state.players.player1.hand.length} cards · ${state.players.player1.captured.length} captured</small>`; const hand = document.createElement('div'); hand.className = 'human-hand';
       for (const card of state.players.player1.hand) { const selected = selectedHandCardId === card.id; const button = document.createElement('button'); button.type = 'button'; button.className = `playing-card hand-card ${cardColorClass(card)}`; button.classList.toggle('selected', selected); button.textContent = cardText(card); button.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit]} in your hand`); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1'; button.addEventListener('click', () => { selectedHandCardId = selected ? null : card.id; selectedBoard.clear(); render(); }); hand.append(button); }
-      humanArea.append(handHeading, hand); table.append(cpuArea, boardArea, humanArea);
-
-      const actionPanel = document.createElement('section'); actionPanel.className = 'action-panel'; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'TURN OPTIONS'; actionPanel.append(actionHeading);
-      if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
-      else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to capture, build, or play the card to the table.'; actionPanel.append(help); const selectPrompt = makeButton('Select a hand card', () => {}, 'quiet-action'); selectPrompt.disabled = true; actionPanel.append(selectPrompt); }
-      else {
-        const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]);
-        const trailMove = legalMoves(state, 'player1').find((move) => move.handCardId === selectedHandCardId && move.type === 'trail');
-        const actions = document.createElement('div'); actions.className = 'action-buttons';
-        if (exactMoves.length === 0) {
-          const invalid = document.createElement('p'); invalid.textContent = 'Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.'; actionPanel.append(invalid);
-        } else {
-          for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : ''));
-        }
-        if (selectedBoard.size > 0 && trailMove) actions.append(makeButton(actionLabel(trailMove, state), () => playMove(trailMove)));
-        actionPanel.append(actions);
-        if (selectedBoard.size > 0) actionPanel.append(makeButton('Clear board selection', () => { selectedBoard.clear(); render(); }, 'quiet-action'));
-        actionPanel.append(makeButton('Cancel card selection', () => { clearSelection(); render(); }, 'quiet-action'));
-      }
+      humanArea.append(handHeading, hand); table.append(cpuArea, boardArea, humanArea, makeActionPanel('mobile-action-panel'));
 
       const rules = document.createElement('details'); rules.className = 'rules-help'; rules.open = true; const summary = document.createElement('summary'); summary.textContent = 'GAME INFO'; const rulesText = document.createElement('div'); rulesText.innerHTML = `<p><strong>First to 11 points.</strong></p><p>Capture loose cards by matching faces or adding numeric cards to the value you play.</p><p>Locked builds may hold multiple groups equal to one target. Add complete groups while you still hold the pickup card.</p><p>Scoring: Aces 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3.</p>`; rules.append(summary, rulesText);
 
       const handStatus = document.createElement('section'); handStatus.className = 'hand-status'; handStatus.innerHTML = `<h2>CURRENT HAND</h2><dl><div><dt>Hand</dt><dd>${state.handNumber}</dd></div><div><dt>Points</dt><dd>You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}</dd></div><div><dt>Status</dt><dd>${state.turn === 'player1' ? 'Your turn' : 'CPU turn'}</dd></div></dl>`;
       const leftRail = document.createElement('aside'); leftRail.className = 'capture11-rail left-rail'; leftRail.append(header, suitKey, rules, makeDiagnostics());
       const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta, table);
-      const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; rightRail.append(actionPanel); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
+      const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; rightRail.append(makeActionPanel('desktop-action-panel')); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
       shell.append(leftRail, tableStage, rightRail); root.append(shell); scheduleCpu();
     };
 

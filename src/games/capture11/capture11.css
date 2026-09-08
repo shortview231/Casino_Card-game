@@ -309,6 +309,7 @@
 }
 
 .action-panel { display: grid; gap: 0.65rem; border-color: #176ca3; }
+.mobile-action-panel { display: none; }
 .action-panel p { margin: 0; color: #d7e3ec; font-size: 0.82rem; line-height: 1.4; }
 .action-buttons { display: grid; gap: 0.5rem; }
 .action-panel button { width: 100%; min-height: 3.2rem; padding: 0.55rem; border: 1px solid #3783b8; border-radius: 0.35rem; background: #10263a; color: #fff; font-size: 0.82rem; font-weight: 800; }
@@ -405,20 +406,33 @@ html[data-contrast='high'] .build-card { background: #fff; color: #000; border-c
 }
 
 @media (max-width: 46rem) {
-  .capture11 { display: flex; flex-direction: column; min-height: 100vh; padding: 0.45rem; }
-  .left-rail { display: grid; grid-template-columns: 1fr; }
+  .game-screen {
+    height: calc(100dvh - 1.5rem);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch;
+  }
+  .capture11 { display: flex; flex-direction: column; min-height: 100%; padding: 0.45rem; }
+  .left-rail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, 10rem); gap: 0.45rem; }
   .left-rail .rules-help { display: none; }
-  .capture11-header { grid-template-columns: 1fr auto; align-items: center; }
-  .match-score { min-width: 10rem; }
+  .capture11-header { align-items: center; padding: 0.65rem; }
+  .capture11-brand p { display: none; }
+  .match-score { min-width: 0; }
+  .suit-key { grid-template-columns: 1fr; gap: 0.25rem; padding: 0.4rem; }
+  .suit-key span { padding: 0.25rem 0.15rem; }
   .table-meta span { padding-inline: 0.25rem; }
-  .card-table { min-height: 0; grid-template-rows: auto auto auto; padding: 0.65rem 0.35rem; border-radius: 1rem; }
+  .card-table { min-height: 0; grid-template-rows: auto auto auto auto; padding: 0.65rem 0.35rem; border-radius: 1rem; }
   .human-area { margin: 0; }
   .playing-card,
   .card-back { width: 5.15rem; min-width: 5.15rem; height: 7.2rem; }
   .capture11 .lv-playing-card.lv-playing-card,
   .capture11 button.lv-playing-card.lv-playing-card { width: 5.15rem; min-width: 5.15rem; height: 7.2rem; min-height: 7.2rem; }
+  .mobile-action-panel { display: grid; margin: 0.35rem; }
+  .desktop-action-panel { display: none; }
   .right-rail { display: grid; grid-template-columns: 1fr 1fr; }
-  .right-rail .action-panel { grid-row: span 2; }
   .cpu-area > .cpu-play-panel { position: relative; inset: auto; grid-template-columns: auto 1fr; }
   .cpu-area > .cpu-play-panel > div { grid-column: 1 / -1; }
 }
@@ -426,14 +440,26 @@ html[data-contrast='high'] .build-card { background: #fff; color: #000; border-c
 @media (max-width: 32rem) {
   .capture11-header { grid-template-columns: 1fr; }
   .match-score { width: 100%; }
-  .table-meta { grid-template-columns: 1fr 1fr; }
-  .table-meta span:nth-child(2) { border-right: 0; }
-  .table-meta span:nth-child(-n + 2) { border-bottom: 1px solid #294564; }
+  .table-meta { grid-template-columns: repeat(4, 1fr); }
   .playing-card,
-  .card-back { width: 4.75rem; min-width: 4.75rem; height: 6.65rem; }
+  .card-back { width: 4rem; min-width: 4rem; height: 5.6rem; }
   .capture11 .lv-playing-card.lv-playing-card,
-  .capture11 button.lv-playing-card.lv-playing-card { width: 4.75rem; min-width: 4.75rem; height: 6.65rem; min-height: 6.65rem; }
-  .right-rail { display: flex; }
+  .capture11 button.lv-playing-card.lv-playing-card { width: 4rem; min-width: 4rem; height: 5.6rem; min-height: 5.6rem; }
+  .human-hand,
+  .board-grid { gap: 0.3rem; }
+  .right-rail { display: flex; flex-direction: column; }
   .build-card { min-width: 100%; }
   .capture11 .capture11-build-card.lv-playing-card { width: 3.75rem; min-width: 3.75rem; height: 5.25rem; min-height: 5.25rem; }
+}
+
+@media (max-width: 64rem) and (max-height: 32rem) {
+  .game-screen {
+    height: calc(100dvh - 2rem);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch;
+  }
 }

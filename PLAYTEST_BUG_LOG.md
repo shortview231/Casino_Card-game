@@ -126,7 +126,7 @@ The engine rejects the combined selection as illegal instead of offering the cap
 
 ## BUG-003 — Mobile layout loads but is effectively unplayable
 
-- **Status:** OPEN — MOBILE PLAYABILITY BLOCKER
+- **Status:** FIXED IN CODE — PENDING REAL DEVICE / ITCH.IO RECHECK
 - **Found:** 2026-09-07
 - **Environment:** live itch.io HTML5 build on a phone/mobile browser
 - **Deployed game commit:** `9f1df190f69a6fe0bfc5ce5cf8c0f57743bb6214`
@@ -157,3 +157,14 @@ The mobile layout may reorganize the desktop cockpit into a single-column/stacke
 - At `32rem`, `.right-rail` changes to `display: flex` without an explicit column direction; inspect whether this creates horizontal expansion or contributes to the zoom/crop failure.
 - Do not rely on the outer itch.io page to provide scrolling. If gameplay can exceed the mobile viewport, Capture 11 itself must provide a reliable touch-scrollable path to every required control.
 - Preserve desktop behavior while fixing mobile.
+
+### Fix and regression coverage
+
+- Phone gameplay now owns a viewport-height vertical scroll container, so touch scrolling does not depend on the surrounding itch.io page.
+- Portrait gameplay places live turn actions directly after the player's hand and keeps the informational rail below the primary play loop.
+- Mobile cards and chrome were compacted without scaling the desktop cockpit or reducing normal-scale touch targets below 64 px wide.
+- Chromium interaction coverage at `390x844` creates a locked BUILD 7 through the real controls, scrolls to its action, advances the CPU turn, and checks global width containment.
+- Chromium interaction coverage at `360x800` selects a hand card, scrolls to and activates a legal trail action, and confirms normal turn advancement.
+- Additional checks cover `412x915`, `844x390` landscape, and `390x844` at 150% app text scale; all retain internal scrolling and no page-wide horizontal overflow.
+- Desktop Chromium inspection at `1280x800` confirms the existing three-column cockpit and desktop action rail remain active.
+- The fix remains pending Robert's confirmation on the redeployed itch.io build using a real phone.
