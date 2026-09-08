@@ -5,6 +5,32 @@ function holdsNumericTarget(hand: readonly Card[], target: number): boolean {
   return hand.some((card) => numericBuildValue(card) === target);
 }
 
+function canPartitionIntoTargetGroups(values: readonly number[], target: number, minimumGroups: number): boolean {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (total < target * minimumGroups || total % target !== 0 || values.some((value) => value > target)) return false;
+
+  const groupCount = total / target;
+  const groups = Array.from({ length: groupCount }, () => 0);
+  const sorted = [...values].sort((a, b) => b - a);
+
+  const place = (index: number): boolean => {
+    if (index === sorted.length) return groups.every((sum) => sum === target);
+    const value = sorted[index]!;
+    const attemptedSums = new Set<number>();
+    for (let group = 0; group < groups.length; group += 1) {
+      const current = groups[group]!;
+      if (attemptedSums.has(current) || current + value > target) continue;
+      attemptedSums.add(current);
+      groups[group] = current + value;
+      if (place(index + 1)) return true;
+      groups[group] = current;
+    }
+    return false;
+  };
+
+  return place(0);
+}
+
 export function canCaptureLooseSelection(
   playedCard: Card,
   selected: readonly LooseBoardCard[],
@@ -18,7 +44,7 @@ export function canCaptureLooseSelection(
 
   const values = selected.map((item) => numericBuildValue(item.card));
   if (values.some((value) => value === null)) return false;
-  return (values as number[]).reduce((sum, value) => sum + value, 0) === playedValue;
+  return canPartitionIntoTargetGroups(values as number[], playedValue, 1);
 }
 
 export function canCreateOpenBuild(
@@ -54,32 +80,6 @@ export function canRaiseOpenBuild(
   const playedValue = numericBuildValue(playedCard);
   if (playedValue === null) return false;
   return build.target + playedValue === declaredTarget;
-}
-
-function canPartitionIntoTargetGroups(values: readonly number[], target: number, minimumGroups: number): boolean {
-  const total = values.reduce((sum, value) => sum + value, 0);
-  if (total < target * minimumGroups || total % target !== 0 || values.some((value) => value > target)) return false;
-
-  const groupCount = total / target;
-  const groups = Array.from({ length: groupCount }, () => 0);
-  const sorted = [...values].sort((a, b) => b - a);
-
-  const place = (index: number): boolean => {
-    if (index === sorted.length) return groups.every((sum) => sum === target);
-    const value = sorted[index]!;
-    const attemptedSums = new Set<number>();
-    for (let group = 0; group < groups.length; group += 1) {
-      const current = groups[group]!;
-      if (attemptedSums.has(current) || current + value > target) continue;
-      attemptedSums.add(current);
-      groups[group] = current + value;
-      if (place(index + 1)) return true;
-      groups[group] = current;
-    }
-    return false;
-  };
-
-  return place(0);
 }
 
 export function canCreatePairedBuild(
