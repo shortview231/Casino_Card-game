@@ -2,6 +2,14 @@
 
 This file records non-bug observations, balance notes, tester reactions, and future design ideas discovered during real playtesting. Bugs belong in `PLAYTEST_BUG_LOG.md`. Do not implement ideas from this file automatically.
 
+## 2026-09-10 — Guided Demo / deterministic scenario harness
+
+- Added six independent scenes loaded by stable identifiers: basic capture, BUG-004 multiple-equal capture, build creation, open-build takeover, multi-group scoring-card strategy, and final capture/sweep/scoring.
+- Every demonstration move is validated and applied through the normal engine. Each scene separately verifies its resulting state before enabling Next.
+- Replay rebuilds a fresh scenario state; Exit returns to the menu, and browser coverage confirms a subsequent normal match receives a normal four-card hand with no demo markers.
+- Final scene uses the normal end-of-hand resolver and `scoreHand`; it produces a 9–4 card count, 5–0 spade count, and 8–1 hand score from the staged captured piles and final sweep.
+- Manual itch.io checks remain necessary on Robert's phone and tablet after deployment.
+
 ## 2026-09-07 — itch.io external-site playtest
 
 - **Build tested:** `e7718d76a649347e6aee2fb1e577edd1739f7f5d`

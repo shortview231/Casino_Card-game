@@ -26,6 +26,8 @@ export interface GameServices {
   save<T>(key: string, value: T): void;
   load<T>(key: string, fallback: T): T;
   complete(result: GameResult): void;
+  exitToTitle(): void;
+  readonly mode: 'normal' | 'guided-demo';
 }
 
 export interface MountedGame {
@@ -34,6 +36,7 @@ export interface MountedGame {
 
 export interface GameTitleActions {
   play(): void;
+  guidedDemo(): void;
   settings(): void;
 }
 

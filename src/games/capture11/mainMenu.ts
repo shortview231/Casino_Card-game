@@ -146,6 +146,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     nav.setAttribute('aria-label', 'Capture 11 menu');
     nav.append(
       menuButton('▶', 'Play vs CPU', actions.play, true),
+      menuButton('◆', 'Guided Demo', actions.guidedDemo),
       menuButton('▤', 'How to Play', showHowToPlay),
       menuButton('♿', 'Accessibility', showAccessibility),
       menuButton('⚙', 'Settings', actions.settings),

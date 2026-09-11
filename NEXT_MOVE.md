@@ -1,5 +1,18 @@
 # Capture 11 Next Move
 
+## Guided Demo implementation — 2026-09-10
+
+The reusable six-scene Guided Demo / Scenario Mode is implemented and locally verified. Named scenario states live in `src/games/capture11/scenarios.ts` and use normal exact-selection, move application, final sweep, and scoring paths.
+
+Local verification passed:
+
+- 66 unit tests and 2 stress tests through `npm run verify:core`
+- production build
+- 32 desktop/mobile Chromium tests, including all six demo scenes, BUG-004 through the UI, final sweep/scoring, replay/exit isolation, accessibility scan, and 150% phone text containment
+- actual desktop and phone screenshots inspected
+
+The only remaining acceptance work is manual live testing of the deployed demo on Robert's intended phone and tablet. Confirm that scene instructions, marked targets, controls, and final scoring remain comfortable inside the itch.io embed.
+
 ## Source of truth
 
 Repository: `shortview231/Casino_Card-game`

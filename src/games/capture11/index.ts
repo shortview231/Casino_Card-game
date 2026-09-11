@@ -13,6 +13,7 @@ import {
   type Capture11State,
 } from './game';
 import type { BoardItem, Card, NumericBuild, PlayerId } from './model';
+import { isExpectedScenarioMove, loadScenario, SCENARIO_IDS, type Capture11Scenario } from './scenarios';
 import './capture11.css';
 
 const SUIT_SYMBOL: Record<Card['suit'], string> = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
@@ -54,8 +55,12 @@ export const capture11: GameModule = {
   manifest: { id: 'capture-11', title: 'Capture 11', version: '0.1.0-playtest', description: 'Build, steal, burn and capture. First to 11 points wins.', minPlayers: 1, maxPlayers: 2 },
 
   mount(root, services): MountedGame {
-    let state = createMatch(services.seed);
-    const recorder = new Capture11PlaytestRecorder(services.seed, state);
+    let scenarioIndex = 0;
+    let activeScenario: Capture11Scenario | null = services.mode === 'guided-demo' ? loadScenario(SCENARIO_IDS[0]) : null;
+    let state = activeScenario?.state ?? createMatch(services.seed);
+    let recorder = new Capture11PlaytestRecorder(services.seed, state);
+    let scenarioComplete = false;
+    let scenarioFeedback = '';
     let selectedHandCardId: string | null = null;
     const selectedBoard = new Set<string>();
     let cpuTimer: number | null = null;
@@ -91,6 +96,7 @@ export const capture11: GameModule = {
     const applyRecordedMove = (player: PlayerId, move: Capture11Move) => { state = applyMove(state, player, move); recorder.recordMove(player, move, state); };
 
     const scheduleCpu = () => {
+      if (activeScenario) return;
       if (destroyed || state.phase !== 'playing' || state.turn !== 'player2' || cpuTimer !== null || cpuPreview !== null) return;
       cpuTimer = window.setTimeout(() => {
         cpuTimer = null;
@@ -104,11 +110,44 @@ export const capture11: GameModule = {
       }, 650);
     };
 
-    const playMove = (move: Capture11Move) => { applyRecordedMove('player1', move); clearSelection(); render(); };
+    const playMove = (move: Capture11Move) => {
+      if (activeScenario && !isExpectedScenarioMove(move, activeScenario.expected)) {
+        scenarioFeedback = 'That move is legal, but this scene is demonstrating the marked move. Select every marked card and the matching action.';
+        render(); return;
+      }
+      applyRecordedMove('player1', move); clearSelection();
+      if (activeScenario) {
+        scenarioComplete = activeScenario.isComplete(state);
+        scenarioFeedback = scenarioComplete ? activeScenario.success : 'The expected move ran, but its required result was not produced. Replay the scene and report this regression.';
+      }
+      render();
+    };
+
+    const loadDemoScene = (index: number) => {
+      scenarioIndex = index; activeScenario = loadScenario(SCENARIO_IDS[index]!); state = activeScenario.state;
+      recorder = new Capture11PlaytestRecorder(state.seed, state); scenarioComplete = false; scenarioFeedback = ''; clearSelection(); render();
+    };
+
+    const makeDemoPanel = (): HTMLElement | null => {
+      if (!activeScenario) return null;
+      const panel = document.createElement('section'); panel.className = 'scenario-panel'; panel.setAttribute('aria-label', 'Guided Demo instructions');
+      const eyebrow = document.createElement('strong'); eyebrow.textContent = 'GUIDED DEMO';
+      const title = document.createElement('h2'); title.textContent = activeScenario.title;
+      const copy = document.createElement('p'); copy.textContent = scenarioComplete ? activeScenario.success : activeScenario.instruction; copy.setAttribute('aria-live', 'polite');
+      const cue = document.createElement('p'); cue.className = 'scenario-cue'; cue.textContent = scenarioComplete ? '✓ Scene complete' : '★ MARKED means select this';
+      const controls = document.createElement('div'); controls.className = 'scenario-controls';
+      controls.append(makeButton('Replay Scene', () => loadDemoScene(scenarioIndex), 'quiet-action'));
+      const finalScene = scenarioIndex === SCENARIO_IDS.length - 1;
+      const next = makeButton(finalScene ? 'Finish Demo' : 'Next Scene', finalScene ? services.exitToTitle : () => loadDemoScene(scenarioIndex + 1), 'primary-action');
+      next.disabled = !scenarioComplete; controls.append(next, makeButton('Exit Demo', services.exitToTitle, 'quiet-action'));
+      panel.append(eyebrow, title, copy, cue);
+      if (scenarioFeedback && !scenarioComplete) { const feedback = document.createElement('p'); feedback.className = 'scenario-feedback'; feedback.textContent = scenarioFeedback; feedback.setAttribute('role', 'alert'); panel.append(feedback); }
+      panel.append(controls); return panel;
+    };
 
     const makeActionPanel = (placementClass: string): HTMLElement => {
       const actionPanel = document.createElement('section'); actionPanel.className = `action-panel ${placementClass}`; actionPanel.setAttribute('aria-label', 'Available actions'); const actionHeading = document.createElement('h2'); actionHeading.textContent = 'TURN OPTIONS'; actionPanel.append(actionHeading);
-      if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
+      if (state.turn !== 'player1') { const waiting = document.createElement('p'); waiting.textContent = activeScenario && scenarioComplete ? 'Scene complete. Replay it or continue to the next scene.' : cpuPreview ? 'CPU card is revealed above. Board update is paused so you can inspect the play.' : 'CPU is thinking…'; actionPanel.append(waiting); }
       else if (!selectedHandCardId) { const help = document.createElement('p'); help.textContent = 'Choose a card from your hand. Then select board cards or a build to capture, build, or play the card to the table.'; actionPanel.append(help); const selectPrompt = makeButton('Select a hand card', () => {}, 'quiet-action'); selectPrompt.disabled = true; actionPanel.append(selectPrompt); }
       else {
         const exactMoves = movesForExactSelection(state, 'player1', selectedHandCardId, [...selectedBoard]);
@@ -117,7 +156,12 @@ export const capture11: GameModule = {
         if (exactMoves.length === 0) {
           const invalid = document.createElement('p'); invalid.textContent = 'Those board cards do not make a legal capture or build. You can still play your selected hand card to the table.'; actionPanel.append(invalid);
         } else {
-          for (const move of exactMoves) actions.append(makeButton(actionLabel(move, state), () => playMove(move), move.type.startsWith('capture') ? 'primary-action' : ''));
+          for (const move of exactMoves) {
+            const expected = !!activeScenario && isExpectedScenarioMove(move, activeScenario.expected);
+            const button = makeButton(actionLabel(move, state), () => playMove(move), expected || move.type.startsWith('capture') ? 'primary-action' : '');
+            if (expected) { button.classList.add('scenario-suggested'); button.setAttribute('aria-description', 'Marked action for this demo scene'); }
+            actions.append(button);
+          }
         }
         if (selectedBoard.size > 0 && trailMove) actions.append(makeButton(actionLabel(trailMove, state), () => playMove(trailMove)));
         actionPanel.append(actions);
@@ -136,9 +180,15 @@ export const capture11: GameModule = {
       grid.append(labels, scoreLine('Aces', score.scores.player1.aces, score.scores.player2.aces), scoreLine('2♠', score.scores.player1.twoOfSpades, score.scores.player2.twoOfSpades), scoreLine('Most spades', score.scores.player1.mostSpades, score.scores.player2.mostSpades), scoreLine('Most cards', score.scores.player1.mostCards, score.scores.player2.mostCards), scoreLine('10♦', score.scores.player1.tenOfDiamonds, score.scores.player2.tenOfDiamonds), scoreLine('Hand total', score.scores.player1.total, score.scores.player2.total));
       const counts = document.createElement('p'); counts.textContent = `Cards captured: ${score.cardCounts.player1}–${score.cardCounts.player2}. Spades: ${score.spadeCounts.player1}–${score.spadeCounts.player2}.`;
       const last = document.createElement('p'); last.className = 'last-action'; last.textContent = state.lastAction; panel.append(heading, match, grid, counts, last);
-      if (state.phase === 'match-over') panel.append(makeButton('Finish match', () => services.complete({ heading: state.winner === 'player1' ? 'You won Capture 11!' : 'CPU won Capture 11', summary: `Final score: You ${state.players.player1.matchScore}, CPU ${state.players.player2.matchScore}.`, score: state.players.player1.matchScore }), 'primary-action'));
-      else panel.append(makeButton('Deal next hand', () => { state = beginNextHand(state); recorder.recordNextHand(state); lastCpuPlay = null; clearSelection(); render(); }, 'primary-action'));
-      panel.append(makeDiagnostics()); root.append(panel);
+      if (activeScenario && score) {
+        panel.prepend(makeDemoPanel()!);
+        const yours = score.scores.player1; const explanation = document.createElement('p'); explanation.className = 'scenario-score-explanation';
+        explanation.textContent = `Your ${yours.total} points: Aces ${yours.aces}, 2♠ ${yours.twoOfSpades}, most spades ${yours.mostSpades}, most cards ${yours.mostCards}, 10♦ ${yours.tenOfDiamonds}. Calculated by the normal scoring engine.`;
+        panel.append(explanation);
+      }
+      if (!activeScenario && state.phase === 'match-over') panel.append(makeButton('Finish match', () => services.complete({ heading: state.winner === 'player1' ? 'You won Capture 11!' : 'CPU won Capture 11', summary: `Final score: You ${state.players.player1.matchScore}, CPU ${state.players.player2.matchScore}.`, score: state.players.player1.matchScore }), 'primary-action'));
+      else if (!activeScenario) panel.append(makeButton('Deal next hand', () => { state = beginNextHand(state); recorder.recordNextHand(state); lastCpuPlay = null; clearSelection(); render(); }, 'primary-action'));
+      if (!activeScenario) panel.append(makeDiagnostics()); root.append(panel);
     };
 
     const render = () => {
@@ -169,22 +219,23 @@ export const capture11: GameModule = {
       const boardArea = document.createElement('div'); boardArea.className = 'board-area'; const boardHeading = document.createElement('h2'); boardHeading.innerHTML = `<span>TABLE</span><small>${state.board.length} available item${state.board.length === 1 ? '' : 's'}</small>`; const boardGrid = document.createElement('div'); boardGrid.className = 'board-grid';
       if (state.board.length === 0) { const empty = document.createElement('p'); empty.textContent = 'Board is clear.'; boardGrid.append(empty); }
       for (const item of state.board) {
-        const key = boardKey(item); const selected = selectedBoard.has(key); const button = document.createElement('button'); button.type = 'button'; button.className = item.kind === 'loose' ? `playing-card board-card ${cardColorClass(item.card)}` : `build-card ${item.mode}`; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1';
+        const key = boardKey(item); const selected = selectedBoard.has(key); const button = document.createElement('button'); button.type = 'button'; button.className = item.kind === 'loose' ? `playing-card board-card ${cardColorClass(item.card)}` : `build-card ${item.mode}`; button.classList.toggle('selected', selected); const suggested = !!activeScenario && !scenarioComplete && activeScenario.suggestedBoardKeys.includes(key); button.classList.toggle('scenario-suggested', suggested); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1';
         if (item.kind === 'loose') { button.textContent = cardText(item.card); button.setAttribute('aria-label', `${item.card.rank} of ${SUIT_NAME[item.card.suit]} on board`); }
         else { renderBuildContents(button, item, ownerName(item.createdBy)); button.setAttribute('aria-label', buildDescription(item)); }
+        if (suggested) button.setAttribute('aria-description', 'Marked card for this demo scene');
         button.addEventListener('click', () => { if (selectedBoard.has(key)) selectedBoard.delete(key); else selectedBoard.add(key); render(); }); boardGrid.append(button);
       }
       boardArea.append(boardHeading, boardGrid);
 
       const humanArea = document.createElement('div'); humanArea.className = 'player-area human-area'; const handHeading = document.createElement('h2'); handHeading.innerHTML = `<span>YOUR HAND</span><small>${state.players.player1.hand.length} cards · ${state.players.player1.captured.length} captured</small>`; const hand = document.createElement('div'); hand.className = 'human-hand';
-      for (const card of state.players.player1.hand) { const selected = selectedHandCardId === card.id; const button = document.createElement('button'); button.type = 'button'; button.className = `playing-card hand-card ${cardColorClass(card)}`; button.classList.toggle('selected', selected); button.textContent = cardText(card); button.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit]} in your hand`); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1'; button.addEventListener('click', () => { selectedHandCardId = selected ? null : card.id; selectedBoard.clear(); render(); }); hand.append(button); }
+      for (const card of state.players.player1.hand) { const selected = selectedHandCardId === card.id; const button = document.createElement('button'); button.type = 'button'; button.className = `playing-card hand-card ${cardColorClass(card)}`; button.classList.toggle('selected', selected); const suggested = !!activeScenario && !scenarioComplete && activeScenario.suggestedHandCardId === card.id; button.classList.toggle('scenario-suggested', suggested); button.textContent = cardText(card); button.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit]} in your hand`); if (suggested) button.setAttribute('aria-description', 'Marked card for this demo scene'); button.setAttribute('aria-pressed', String(selected)); button.disabled = state.turn !== 'player1'; button.addEventListener('click', () => { selectedHandCardId = selected ? null : card.id; selectedBoard.clear(); render(); }); hand.append(button); }
       humanArea.append(handHeading, hand); table.append(cpuArea, boardArea, humanArea, makeActionPanel('mobile-action-panel'));
 
       const rules = document.createElement('details'); rules.className = 'rules-help'; rules.open = true; const summary = document.createElement('summary'); summary.textContent = 'GAME INFO'; const rulesText = document.createElement('div'); rulesText.innerHTML = `<p><strong>First to 11 points.</strong></p><p>Capture loose cards by matching faces or adding numeric cards to the value you play.</p><p>Locked builds may hold multiple groups equal to one target. Add complete groups while you still hold the pickup card.</p><p>Scoring: Aces 1, 2♠ 1, most spades 1, most cards 2, 10♦ 3.</p>`; rules.append(summary, rulesText);
 
-      const handStatus = document.createElement('section'); handStatus.className = 'hand-status'; handStatus.innerHTML = `<h2>CURRENT HAND</h2><dl><div><dt>Hand</dt><dd>${state.handNumber}</dd></div><div><dt>Points</dt><dd>You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}</dd></div><div><dt>Status</dt><dd>${state.turn === 'player1' ? 'Your turn' : 'CPU turn'}</dd></div></dl>`;
-      const leftRail = document.createElement('aside'); leftRail.className = 'capture11-rail left-rail'; leftRail.append(header, suitKey, rules, makeDiagnostics());
-      const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta, table);
+      const handStatus = document.createElement('section'); handStatus.className = 'hand-status'; handStatus.innerHTML = `<h2>CURRENT HAND</h2><dl><div><dt>Hand</dt><dd>${state.handNumber}</dd></div><div><dt>Points</dt><dd>You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}</dd></div><div><dt>Status</dt><dd>${activeScenario && scenarioComplete ? 'Scene complete' : state.turn === 'player1' ? 'Your turn' : 'CPU turn'}</dd></div></dl>`;
+      const leftRail = document.createElement('aside'); leftRail.className = 'capture11-rail left-rail'; leftRail.append(header, suitKey, rules); if (!activeScenario) leftRail.append(makeDiagnostics());
+      const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta); const demoPanel = makeDemoPanel(); if (demoPanel) tableStage.append(demoPanel); tableStage.append(table);
       const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; rightRail.append(makeActionPanel('desktop-action-panel')); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
       shell.append(leftRail, tableStage, rightRail); root.append(shell); scheduleCpu();
     };

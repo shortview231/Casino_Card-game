@@ -50,6 +50,7 @@ export class MicrogameRuntime {
     if (this.game.renderTitle) {
       this.game.renderTitle(this.root, {
         play: () => this.showGame(),
+        guidedDemo: () => this.showGame('guided-demo'),
         settings: () => this.showSettings(),
       });
       return;
@@ -120,7 +121,7 @@ export class MicrogameRuntime {
     this.root.append(section);
   }
 
-  private showGame(): void {
+  private showGame(mode: 'normal' | 'guided-demo' = 'normal'): void {
     this.clear();
     this.result = null;
     const gameHost = document.createElement('section');
@@ -138,6 +139,8 @@ export class MicrogameRuntime {
         this.result = result;
         this.showResults();
       },
+      exitToTitle: () => this.showTitle(),
+      mode,
     });
   }
 
