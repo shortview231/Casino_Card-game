@@ -92,6 +92,9 @@
   display: grid;
   gap: 0.7rem;
 }
+.c11-difficulty-picker { display: grid; gap: 0.35rem; margin-top: 0.8rem; color: #9ed8ef; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.08em; }
+.c11-difficulty-picker select { width: 100%; padding: 0.65rem 0.75rem; background: #071525; color: #fff; border: 2px solid #43d9ff; border-radius: 0.35rem; font: inherit; letter-spacing: normal; }
+.c11-difficulty-description { margin: 0; color: #c8d9e6; font-size: 0.76rem; font-weight: 600; letter-spacing: normal; }
 
 .c11-menu-button {
   width: 100%;

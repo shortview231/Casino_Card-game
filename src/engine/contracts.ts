@@ -20,6 +20,8 @@ export interface GameResult {
   score?: number;
 }
 
+export type CpuDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface GameServices {
   readonly seed: number;
   readonly preferences: AccessibilityPreferences;
@@ -28,6 +30,7 @@ export interface GameServices {
   complete(result: GameResult): void;
   exitToTitle(): void;
   readonly mode: 'normal' | 'guided-demo';
+  readonly difficulty: CpuDifficulty;
 }
 
 export interface MountedGame {
@@ -35,7 +38,8 @@ export interface MountedGame {
 }
 
 export interface GameTitleActions {
-  play(): void;
+  play(difficulty?: CpuDifficulty): void;
+  loadDifficulty?(): CpuDifficulty;
   guidedDemo(): void;
   settings(): void;
 }

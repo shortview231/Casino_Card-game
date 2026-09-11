@@ -1,5 +1,5 @@
 import type { GameModule, MountedGame } from '../../engine/contracts';
-import { chooseCpuMove } from './ai';
+import { chooseCpuMove, createCpuMemory } from './ai';
 import { renderBuildContents } from './buildRenderer';
 import { describeCpuMove, type CpuPlayPresentation } from './cpuPresentation';
 import { Capture11PlaytestRecorder, copyPlaytestLog } from './debug';
@@ -68,6 +68,7 @@ export const capture11: GameModule = {
     let cpuPreview: CpuPlayPresentation | null = null;
     let lastCpuPlay: CpuPlayPresentation | null = null;
     let destroyed = false;
+    const cpuMemory = createCpuMemory();
 
     const clearSelection = () => { selectedHandCardId = null; selectedBoard.clear(); };
 
@@ -102,7 +103,7 @@ export const capture11: GameModule = {
       cpuTimer = window.setTimeout(() => {
         cpuTimer = null;
         if (destroyed || state.phase !== 'playing' || state.turn !== 'player2') return;
-        const move = chooseCpuMove(state); cpuPreview = describeCpuMove(state, move); render();
+        const move = chooseCpuMove(state, 'player2', services.difficulty, cpuMemory); cpuPreview = describeCpuMove(state, move); render();
         cpuTimer = window.setTimeout(() => {
           cpuTimer = null;
           if (destroyed || state.phase !== 'playing' || state.turn !== 'player2') return;
@@ -199,7 +200,7 @@ export const capture11: GameModule = {
       root.replaceChildren(); const shell = document.createElement('div'); shell.className = `capture11${activeScenario ? ' is-guided-demo' : ''}`;
       const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); titleWrap.className = 'capture11-brand'; const heading = document.createElement('h1'); heading.innerHTML = 'CAPTURE <strong>11</strong>'; const subtitle = document.createElement('p'); subtitle.textContent = 'STRATEGY · RISK · BIG PLAYS'; titleWrap.append(heading, subtitle);
       const matchScore = document.createElement('div'); matchScore.className = 'match-score'; matchScore.setAttribute('aria-label', `Match score. You ${state.players.player1.matchScore}. CPU ${state.players.player2.matchScore}.`); matchScore.innerHTML = `<span>You <strong>${state.players.player1.matchScore}</strong></span><span>CPU <strong>${state.players.player2.matchScore}</strong></span>`; header.append(titleWrap, matchScore);
-      const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>HAND <strong>${state.handNumber}</strong></span><span>DEALER <strong>${ownerName(state.dealer)}</strong></span><span>TURN <strong>${ownerName(state.turn)}</strong></span><span>DECK <strong>${state.deck.length}</strong></span>`;
+      const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>HAND <strong>${state.handNumber}</strong></span><span>DEALER <strong>${ownerName(state.dealer)}</strong></span><span>TURN <strong>${ownerName(state.turn)}</strong></span><span>DECK <strong>${state.deck.length}</strong></span><span class="cpu-difficulty">CPU <strong>${services.difficulty[0]!.toUpperCase()}${services.difficulty.slice(1)}</strong></span>`;
       const suitKey = document.createElement('p'); suitKey.className = 'suit-key';
       for (const [className, text] of [
         ['suit-spades', 'S ♠ Spades'],

@@ -1,4 +1,4 @@
-import type { GameTitleActions } from '../../engine/contracts';
+import type { CpuDifficulty, GameTitleActions } from '../../engine/contracts';
 import { renderPlayingCardBack, renderPlayingCardFace, type PlayingCardVisual } from '../../engine/playingCards';
 import './mainMenu.css';
 
@@ -144,8 +144,22 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     const nav = document.createElement('nav');
     nav.className = 'c11-menu-nav';
     nav.setAttribute('aria-label', 'Capture 11 menu');
+    const difficultyWrap = document.createElement('label');
+    difficultyWrap.className = 'c11-difficulty-picker';
+    difficultyWrap.append(text('span', 'CPU DIFFICULTY'));
+    const difficulty = document.createElement('select');
+    difficulty.id = 'capture11-difficulty'; difficulty.name = 'difficulty'; difficulty.setAttribute('aria-label', 'CPU Difficulty');
+    const difficultyOptions: readonly [CpuDifficulty, string, string][] = [
+      ['easy', 'Easy', 'Plays the cards in front of it.'],
+      ['medium', 'Medium', 'Plans around its current hand.'],
+      ['hard', 'Hard', 'Tracks the deck and plays strategically.'],
+    ];
+    for (const [value, label] of difficultyOptions) difficulty.append(Object.assign(document.createElement('option'), { value, textContent: label }));
+    difficulty.value = actions.loadDifficulty?.() ?? 'medium';
+    difficultyWrap.append(difficulty);
+    const play = () => actions.play(difficulty.value as CpuDifficulty);
     nav.append(
-      menuButton('▶', 'Play vs CPU', actions.play, true),
+      menuButton('▶', 'Play vs CPU', play, true),
       menuButton('◆', 'Guided Demo', actions.guidedDemo),
       menuButton('▤', 'How to Play', showHowToPlay),
       menuButton('♿', 'Accessibility', showAccessibility),
@@ -153,6 +167,9 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
       menuButton('▣', 'Feedback', showFeedback),
       menuButton('↪', 'Quit', showQuit),
     );
+    const difficultyDescription = text('p', difficultyOptions.find(([value]) => value === difficulty.value)?.[2] ?? difficultyOptions[1]![2], 'c11-difficulty-description');
+    difficulty.addEventListener('change', () => { difficultyDescription.textContent = difficultyOptions.find(([value]) => value === difficulty.value)?.[2] ?? ''; });
+    difficultyWrap.append(difficultyDescription);
 
     const vision = document.createElement('div');
     vision.className = 'c11-menu-vision';
@@ -160,7 +177,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     const visionCopy = document.createElement('div');
     visionCopy.append(text('strong', 'Designed for everyone to play'), text('p', 'Large, clear cards and a high-contrast interface.'));
     vision.append(visionCopy);
-    rail.append(brand, nav, vision);
+    rail.append(brand, nav, difficultyWrap, vision);
 
     const stage = document.createElement('main');
     stage.className = 'c11-menu-stage';
@@ -202,7 +219,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     body.append(list);
     const buttons = document.createElement('div');
     buttons.className = 'c11-info-actions';
-    buttons.append(infoButton('Play vs CPU', actions.play, true), infoButton('Back to Main Menu', showMain));
+    buttons.append(infoButton('Play vs CPU', () => actions.play(), true), infoButton('Back to Main Menu', showMain));
     body.append(buttons);
     root.replaceChildren(shell);
     heading.focus();

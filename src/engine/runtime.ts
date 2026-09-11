@@ -1,5 +1,6 @@
 import type {
   AccessibilityPreferences,
+  CpuDifficulty,
   GameModule,
   GameResult,
   MountedGame,
@@ -17,12 +18,14 @@ export class MicrogameRuntime {
   private mounted: MountedGame | null = null;
   private result: GameResult | null = null;
   private prefs: AccessibilityPreferences;
+  private difficulty: CpuDifficulty;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly game: GameModule,
   ) {
     this.prefs = loadJson('engine', 'preferences', DEFAULT_PREFS);
+    this.difficulty = loadJson('capture-11', 'cpuDifficulty', 'medium' as CpuDifficulty);
     this.applyPreferences();
   }
 
@@ -49,9 +52,10 @@ export class MicrogameRuntime {
 
     if (this.game.renderTitle) {
       this.game.renderTitle(this.root, {
-        play: () => this.showGame(),
+        play: (difficulty = this.difficulty) => { this.difficulty = difficulty; saveJson('capture-11', 'cpuDifficulty', difficulty); this.showGame(); },
+        loadDifficulty: () => this.difficulty,
         guidedDemo: () => this.showGame('guided-demo'),
-        settings: () => this.showSettings(),
+      settings: () => this.showSettings(),
       });
       return;
     }
@@ -141,6 +145,7 @@ export class MicrogameRuntime {
       },
       exitToTitle: () => this.showTitle(),
       mode,
+      difficulty: this.difficulty,
     });
   }
 
