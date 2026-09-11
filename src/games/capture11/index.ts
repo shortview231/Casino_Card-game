@@ -126,6 +126,8 @@ export const capture11: GameModule = {
     const loadDemoScene = (index: number) => {
       scenarioIndex = index; activeScenario = loadScenario(SCENARIO_IDS[index]!); state = activeScenario.state;
       recorder = new Capture11PlaytestRecorder(state.seed, state); scenarioComplete = false; scenarioFeedback = ''; clearSelection(); render();
+      root.scrollTo({ top: 0 }); window.scrollTo({ top: 0 });
+      window.requestAnimationFrame(() => { root.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); });
     };
 
     const makeDemoPanel = (): HTMLElement | null => {
@@ -193,7 +195,7 @@ export const capture11: GameModule = {
 
     const render = () => {
       if (destroyed) return; if (state.phase !== 'playing') { renderScoreScreen(); return; }
-      root.replaceChildren(); const shell = document.createElement('div'); shell.className = 'capture11';
+      root.replaceChildren(); const shell = document.createElement('div'); shell.className = `capture11${activeScenario ? ' is-guided-demo' : ''}`;
       const header = document.createElement('header'); header.className = 'capture11-header'; const titleWrap = document.createElement('div'); titleWrap.className = 'capture11-brand'; const heading = document.createElement('h1'); heading.innerHTML = 'CAPTURE <strong>11</strong>'; const subtitle = document.createElement('p'); subtitle.textContent = 'STRATEGY · RISK · BIG PLAYS'; titleWrap.append(heading, subtitle);
       const matchScore = document.createElement('div'); matchScore.className = 'match-score'; matchScore.setAttribute('aria-label', `Match score. You ${state.players.player1.matchScore}. CPU ${state.players.player2.matchScore}.`); matchScore.innerHTML = `<span>You <strong>${state.players.player1.matchScore}</strong></span><span>CPU <strong>${state.players.player2.matchScore}</strong></span>`; header.append(titleWrap, matchScore);
       const meta = document.createElement('div'); meta.className = 'table-meta'; meta.innerHTML = `<span>HAND <strong>${state.handNumber}</strong></span><span>DEALER <strong>${ownerName(state.dealer)}</strong></span><span>TURN <strong>${ownerName(state.turn)}</strong></span><span>DECK <strong>${state.deck.length}</strong></span>`;
@@ -235,8 +237,8 @@ export const capture11: GameModule = {
 
       const handStatus = document.createElement('section'); handStatus.className = 'hand-status'; handStatus.innerHTML = `<h2>CURRENT HAND</h2><dl><div><dt>Hand</dt><dd>${state.handNumber}</dd></div><div><dt>Points</dt><dd>You ${state.players.player1.matchScore} · CPU ${state.players.player2.matchScore}</dd></div><div><dt>Status</dt><dd>${activeScenario && scenarioComplete ? 'Scene complete' : state.turn === 'player1' ? 'Your turn' : 'CPU turn'}</dd></div></dl>`;
       const leftRail = document.createElement('aside'); leftRail.className = 'capture11-rail left-rail'; leftRail.append(header, suitKey, rules); if (!activeScenario) leftRail.append(makeDiagnostics());
-      const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta); const demoPanel = makeDemoPanel(); if (demoPanel) tableStage.append(demoPanel); tableStage.append(table);
-      const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; rightRail.append(makeActionPanel('desktop-action-panel')); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
+      const tableStage = document.createElement('main'); tableStage.className = 'capture11-table-stage'; tableStage.append(meta); const mobileDemoPanel = makeDemoPanel(); if (mobileDemoPanel) { mobileDemoPanel.classList.add('mobile-scenario-panel'); tableStage.append(mobileDemoPanel); } tableStage.append(table);
+      const rightRail = document.createElement('aside'); rightRail.className = 'capture11-rail right-rail'; const desktopDemoPanel = makeDemoPanel(); if (desktopDemoPanel) { desktopDemoPanel.classList.add('desktop-scenario-panel'); rightRail.append(desktopDemoPanel); } rightRail.append(makeActionPanel('desktop-action-panel')); if (cpuPlayPanel && !cpuPreview) rightRail.append(cpuPlayPanel); rightRail.append(handStatus, live);
       shell.append(leftRail, tableStage, rightRail); root.append(shell); scheduleCpu();
     };
 

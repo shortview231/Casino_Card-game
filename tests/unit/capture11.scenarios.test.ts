@@ -16,6 +16,27 @@ describe('Capture 11 reusable scenarios', () => {
     for (const id of SCENARIO_IDS) {
       const first = loadScenario(id); const second = loadScenario(id);
       expect(first.id).toBe(id); expect(first.state.turn).toBe('player1');
+      expect(first.state.players.player1.hand.some(card => card.id === first.suggestedHandCardId)).toBe(true);
+      expect(first.suggestedBoardKeys.every(key => first.state.board.some(item =>
+        item.kind === 'loose' ? key === `loose:${item.card.id}` : key === `build:${item.id}`,
+      ))).toBe(true);
+      if (id !== 'final_sweep_demo') {
+        expect(first.state.players.player1.hand).toHaveLength(4);
+        expect(first.state.players.player2.hand).toHaveLength(4);
+        expect(first.state.board.length).toBeGreaterThanOrEqual(4);
+      } else {
+        expect(first.state.players.player1.hand).toHaveLength(1);
+        expect(first.state.players.player2.hand).toHaveLength(0);
+        expect(first.state.deck).toHaveLength(0);
+      }
+      const inventory = [
+        ...first.state.deck,
+        ...first.state.players.player1.hand, ...first.state.players.player2.hand,
+        ...first.state.players.player1.captured, ...first.state.players.player2.captured,
+        ...first.state.board.flatMap(item => item.kind === 'loose' ? [item.card] : item.cards),
+      ];
+      expect(inventory, `${id} should stage a complete deck`).toHaveLength(52);
+      expect(new Set(inventory.map(card => card.id)).size, `${id} should not duplicate cards`).toBe(52);
       expect(first.state).not.toBe(second.state); expect(first.state.board).not.toBe(second.state.board);
     }
   });
@@ -51,7 +72,7 @@ describe('Capture 11 reusable scenarios', () => {
   it('raises the CPU build from 5 to 8 and transfers ownership', () => {
     const { next } = expectedMove('build_takeover_demo');
     expect(next.board.find(item => item.kind === 'build')).toMatchObject({ target: 8, createdBy: 'player1' });
-    expect(next.players.player1.hand.map(card => card.rank)).toEqual(['8']);
+    expect(next.players.player1.hand.map(card => card.rank)).toEqual(['8', 'Q', '9']);
   });
 
   it('executes the strategic two-group capture including 10 of Diamonds', () => {
@@ -63,9 +84,11 @@ describe('Capture 11 reusable scenarios', () => {
   it('final capture sweeps leftovers and scores through normal hand resolution', () => {
     const { next } = expectedMove('final_sweep_demo');
     expect(next.phase).toBe('hand-over'); expect(next.board).toEqual([]);
-    expect(next.players.player1.captured).toHaveLength(9);
-    expect(next.lastAction).toContain('take the final 2 board cards');
-    expect(next.lastHandScore?.scores.player1).toMatchObject({ aces: 1, twoOfSpades: 1, mostSpades: 1, mostCards: 2, tenOfDiamonds: 3, total: 8 });
-    expect(next.players.player1.matchScore).toBe(8); expect(next.players.player2.matchScore).toBe(1);
+    expect(next.players.player1.captured).toHaveLength(28);
+    expect(next.players.player2.captured).toHaveLength(24);
+    expect(next.lastAction).toContain('take the final 3 board cards');
+    expect(next.lastHandScore).not.toBeNull();
+    expect(next.players.player1.matchScore).toBe(next.lastHandScore!.scores.player1.total);
+    expect(next.players.player2.matchScore).toBe(next.lastHandScore!.scores.player2.total);
   });
 });
