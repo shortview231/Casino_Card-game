@@ -11,6 +11,8 @@ Local verification passed:
 - 32 desktop/mobile Chromium tests, including all six demo scenes, BUG-004 through the UI, final sweep/scoring, replay/exit isolation, accessibility scan, and 150% phone text containment
 - actual desktop and phone screenshots inspected
 
+Deployed game commit `830821a3f74eb584191893ef2d478bff28dc10b1` to `robert-sory/capture-11:html5`. GitHub Actions workflow `34554632253` completed successfully, including the full core/browser checks and itch.io upload.
+
 The only remaining acceptance work is manual live testing of the deployed demo on Robert's intended phone and tablet. Confirm that scene instructions, marked targets, controls, and final scoring remain comfortable inside the itch.io embed.
 
 ## Source of truth

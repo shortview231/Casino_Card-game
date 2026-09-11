@@ -9,6 +9,7 @@ This file records non-bug observations, balance notes, tester reactions, and fut
 - Replay rebuilds a fresh scenario state; Exit returns to the menu, and browser coverage confirms a subsequent normal match receives a normal four-card hand with no demo markers.
 - Final scene uses the normal end-of-hand resolver and `scoreHand`; it produces a 9–4 card count, 5–0 spade count, and 8–1 hand score from the staged captured piles and final sweep.
 - Manual itch.io checks remain necessary on Robert's phone and tablet after deployment.
+- Deployed game commit `830821a3f74eb584191893ef2d478bff28dc10b1` to the existing `robert-sory/capture-11:html5` target; [workflow 34554632253](https://github.com/shortview231/Casino_Card-game/actions/runs/34554632253) passed and uploaded successfully.
 
 ## 2026-09-07 — itch.io external-site playtest
 
