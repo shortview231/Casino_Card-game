@@ -196,3 +196,4 @@ Track this separately from BUG-002 until proven otherwise. It may share the same
 - Full browser suite passed: 26 tests, including BUG-001, BUG-002, menu, keyboard, accessibility, preferences, phone scrolling, 150% text, landscape, and coarse-pointer host coverage. Local Chromium used `/usr/bin/chromium-browser` on preview port 4173.
 - Inspected actual desktop and phone capture-ready screenshots. Existing desktop cockpit and phone action reachability remain intact. Port 8765 was untouched; guided demo remains planning only.
 - Robert's live itch.io recheck is still required before closing BUG-004.
+- Deployed `d9209ea35545e20700d05ec06ad186aff92e3f75` to existing `robert-sory/capture-11:html5`; [workflow 34553118094](https://github.com/shortview231/Casino_Card-game/actions/runs/34553118094) completed successfully, including CI core/browser verification and the upload.

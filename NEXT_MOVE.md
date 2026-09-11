@@ -7,7 +7,22 @@ Branch: `capture-11-rebuild-v0.1`
 
 Read `AGENTS.md`, `PLAYTEST_BUG_LOG.md`, and `GUIDED_DEMO_MODE_PLAN.md` before editing.
 
-## Current priority: make tonight's build sellable
+## Release pass completed — 2026-09-10
+
+BUG-004 verification and deployment are complete.
+
+- Deployed commit: `d9209ea35545e20700d05ec06ad186aff92e3f75`.
+- Local verification: full core suite (58 tests, plus 2 stress tests), production build, and all 26 Chromium desktop/mobile browser tests passed. Actual capture-ready screenshots were inspected.
+- GitHub deployment succeeded, including core/browser verification and the itch.io upload: https://github.com/shortview231/Casino_Card-game/actions/runs/34553118094
+- Existing target: `robert-sory/capture-11:html5`.
+
+## Current next move: live release recheck
+
+Robert should recheck BUG-004 on the deployed itch.io build: play an 8 to capture two loose 8s, and an 8 to capture loose 8 + 3 + 5 when those situations arise. Keep BUG-004 fixed in code, pending live recheck until that confirmation arrives.
+
+After the sellable build is confirmed stable, the next product feature is the guided demo described in `GUIDED_DEMO_MODE_PLAN.md`. Do not implement it as part of this release verification pass.
+
+## Completed release scope (reference)
 
 Do not start new mobile work or build the tutorial in this task.
 
