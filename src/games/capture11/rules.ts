@@ -75,7 +75,7 @@ export function canCaptureLooseSelection(
 
   const playedValue = numericBuildValue(playedCard);
   if (playedValue === null) {
-    return selected.length === 1 && selected[0]!.card.rank === playedCard.rank;
+    return selected.every(item => item.card.rank === playedCard.rank);
   }
 
   const values = selected.map((item) => numericBuildValue(item.card));

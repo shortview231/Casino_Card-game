@@ -66,6 +66,21 @@ describe('Capture 11 match flow', () => {
     expect(next.board.some((item) => item.kind === 'loose' && item.card.id === played.id)).toBe(true);
   });
 
+  it('captures three matching face cards through the normal legal move path', () => {
+    const jack = card('J', 'hearts');
+    const jacks = [card('J', 'clubs'), card('J', 'diamonds'), card('J', 'spades')];
+    const state: Capture11State = {
+      ...buildScenario(),
+      board: jacks.map(cardOnBoard => ({ kind: 'loose' as const, card: cardOnBoard })),
+      players: { ...buildScenario().players, player1: { ...buildScenario().players.player1, hand: [jack] } },
+    };
+    const move = legalMoves(state, 'player1').find(candidate => candidate.type === 'capture-loose' && candidate.cardIds.length === 3);
+    expect(move).toBeDefined();
+    const next = applyMove(state, 'player1', move!);
+    expect(next.board).toHaveLength(0);
+    expect(next.players.player1.captured).toHaveLength(4);
+  });
+
   it('builds A + 4 to five only because another five is held', () => {
     const state = buildScenario();
     const build = legalMoves(state, 'player1').find(

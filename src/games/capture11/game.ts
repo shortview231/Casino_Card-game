@@ -468,10 +468,10 @@ export function legalMoves(state: Capture11State, player: PlayerId): Capture11Mo
     moves.push({ type: 'trail', handCardId: played.id });
 
     if (value === null) {
-      for (const item of loose) {
-        if (item.card.rank === played.rank) {
-          moves.push({ type: 'capture-loose', handCardId: played.id, cardIds: [item.card.id] });
-        }
+      const matching = loose.filter(item => item.card.rank === played.rank);
+      for (let mask = 1; mask < (1 << matching.length); mask += 1) {
+        const selection = matching.filter((_, index) => (mask & (1 << index)) !== 0);
+        moves.push({ type: 'capture-loose', handCardId: played.id, cardIds: selection.map(item => item.card.id) });
       }
       continue;
     }

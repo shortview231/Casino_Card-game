@@ -34,6 +34,7 @@ describe('Capture 11 loose captures', () => {
 
   it('lets a face card capture a matching face rank', () => {
     expect(canCaptureLooseSelection(card('Q', 'hearts'), [loose('Q', 'clubs')])).toBe(true);
+    expect(canCaptureLooseSelection(card('J', 'hearts'), [loose('J', 'clubs'), loose('J', 'diamonds'), loose('J', 'spades')])).toBe(true);
     expect(canCaptureLooseSelection(card('Q', 'hearts'), [loose('K', 'clubs')])).toBe(false);
   });
 });
