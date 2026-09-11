@@ -35,12 +35,18 @@ export function renderBuildContents(
 
   const cards = document.createElement('span');
   cards.className = 'capture11-build-cards';
-  for (const card of build.cards) {
+  const components = build.components ?? [build.cards];
+  for (const [componentIndex, component] of components.entries()) {
+    if (componentIndex > 0) {
+      const separator = document.createElement('span'); separator.className = 'capture11-build-component-separator'; separator.textContent = '+'; separator.setAttribute('aria-hidden', 'true'); cards.append(separator);
+    }
+    for (const card of component) {
     const cardFace = document.createElement('span');
     cardFace.className = 'capture11-build-card';
     cardFace.setAttribute('aria-hidden', 'true');
     renderPlayingCardFace(cardFace, card);
     cards.append(cardFace);
+    }
   }
 
   const count = document.createElement('span');

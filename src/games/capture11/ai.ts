@@ -50,6 +50,10 @@ function scoreMove(state: Capture11State, player: PlayerId, move: Capture11Move)
     return 62 + enemyBonus + sizeBonus + move.target;
   }
 
+  if (move.type === 'extend-build') {
+    return 58 + move.cardIds.length * 4 + move.target;
+  }
+
   if (move.type === 'build-paired' || move.type === 'extend-paired') {
     return 52 + move.target - cardTacticalValue(played) * 0.5;
   }

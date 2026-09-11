@@ -31,6 +31,42 @@ function canPartitionIntoTargetGroups(values: readonly number[], target: number,
   return place(0);
 }
 
+/** Return a concrete partition for a multi-component build, when one exists. */
+export function partitionCardsIntoTargetGroups(cards: readonly Card[], target: number, minimumGroups = 1): Card[][] | null {
+  const values = cards.map(numericBuildValue);
+  if (values.some((value) => value === null)) return null;
+  const numeric = values as number[];
+  const total = numeric.reduce((sum, value) => sum + value, 0);
+  if (total < target * minimumGroups || total % target !== 0 || numeric.some((value) => value > target)) return null;
+  const groupCount = total / target;
+  const groups: { cards: Card[]; sum: number }[] = Array.from({ length: groupCount }, () => ({ cards: [], sum: 0 }));
+  const ordered = cards.map((card, index) => ({ card, value: numeric[index]! })).sort((a, b) => b.value - a.value);
+  const place = (index: number): boolean => {
+    if (index === ordered.length) return groups.every((group) => group.sum === target);
+    const entry = ordered[index]!;
+    const attemptedSums = new Set<number>();
+    for (const group of groups) {
+      if (attemptedSums.has(group.sum) || group.sum + entry.value > target) continue;
+      attemptedSums.add(group.sum); group.cards.push(entry.card); group.sum += entry.value;
+      if (place(index + 1)) return true;
+      group.sum -= entry.value; group.cards.pop();
+    }
+    return false;
+  };
+  return place(0) ? groups.map((group) => [...group.cards]) : null;
+}
+
+export function buildComponents(build: NumericBuild): readonly (readonly Card[])[] {
+  if (build.components && build.components.length > 0) return build.components;
+  return [build.cards];
+}
+
+export function canAddBuildComponent(build: NumericBuild, selectedLooseCards: readonly LooseBoardCard[]): boolean {
+  if (selectedLooseCards.length === 0) return false;
+  const component = selectedLooseCards.map((item) => item.card);
+  return partitionCardsIntoTargetGroups(component, build.target, 1)?.length === 1;
+}
+
 export function canCaptureLooseSelection(
   playedCard: Card,
   selected: readonly LooseBoardCard[],
@@ -102,6 +138,7 @@ export function canExtendPairedBuild(
   build: NumericBuild,
   remainingHand: readonly Card[],
 ): boolean {
+  if (build.mode !== 'paired') return false;
   if (!holdsNumericTarget(remainingHand, build.target)) return false;
   const values = [playedCard, ...selectedLooseCards.map((item) => item.card)].map(numericBuildValue);
   if (values.some((value) => value === null)) return false;

@@ -11,10 +11,10 @@ async function clickMove(page: Page, hand: string, board: string[], action: stri
   await button.scrollIntoViewIfNeeded(); await expect(button).toHaveClass(/scenario-suggested/); await button.click();
 }
 
-test('Guided Demo runs all six real moves including BUG-004 and final scoring', async ({ page }, testInfo) => {
+test('Guided Demo runs all seven real moves including BUG-004, final scoring, and multi-build capture', async ({ page }, testInfo) => {
   if (testInfo.project.name === 'chromium') await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/'); await page.getByRole('button', { name: 'Guided Demo' }).click();
-  await expect(page.getByRole('heading', { name: '1 of 6 · Basic Capture' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '1 of 7 · Basic Capture' })).toBeVisible();
   await expect(page.locator('.hand-card')).toHaveCount(4); await expect(page.locator('.cpu-hand .card-back')).toHaveCount(4);
   const openingCard = page.getByRole('button', { name: '4 of Spades in your hand' });
   if (testInfo.project.name === 'chromium') await expect(openingCard).toBeInViewport(); else await openingCard.scrollIntoViewIfNeeded();
@@ -24,7 +24,7 @@ test('Guided Demo runs all six real moves including BUG-004 and final scoring', 
   await clickMove(page, '4 of Spades', ['4 of Hearts'], 'Capture 1 board card');
   await expect(page.locator('.scenario-panel:visible').getByText('✓ Scene complete')).toBeVisible(); await page.getByRole('button', { name: 'Next Scene' }).click();
 
-  await expect(page.getByRole('heading', { name: '2 of 6 · Multiple Equal Cards' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '2 of 7 · Multiple Equal Cards' })).toBeVisible();
   await expect(page.locator('.hand-card')).toHaveCount(4); await expect(page.locator('.cpu-hand .card-back')).toHaveCount(4);
   await clickMove(page, '8 of Spades', ['8 of Hearts', '8 of Diamonds'], 'Capture 2 board cards');
   await expect(page.locator('.scenario-panel:visible').getByText(/Both loose 8s were captured/)).toBeVisible();
@@ -58,6 +58,22 @@ test('Guided Demo runs all six real moves including BUG-004 and final scoring', 
   await expect(page.getByText('Cards captured: 28–24.')).toBeVisible();
   await expect(page.getByText(/Your \d+ points: Aces \d+, 2♠ \d+, most spades \d+, most cards \d+, 10♦ \d+/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('final-sweep-score.png'), fullPage: false });
+  await page.getByRole('button', { name: 'Next Scene' }).click();
+
+  await expect(page.getByRole('heading', { name: '7 of 7 · Multi-Build Capture' })).toBeVisible();
+  await expect(page.locator('.hand-card')).toHaveCount(4); await expect(page.locator('.cpu-hand .card-back')).toHaveCount(4);
+  await page.screenshot({ path: testInfo.outputPath('scene-7-multi-build-staged.png'), fullPage: false });
+  await page.getByRole('button', { name: '10 of Spades in your hand' }).click();
+  await page.getByRole('button', { name: /10 build, open, You/ }).click();
+  await page.getByRole('button', { name: '7 of Diamonds on board' }).click();
+  await page.getByRole('button', { name: '3 of Spades on board' }).click();
+  const addComponent = page.getByRole('button', { name: /^Add 10 component/ });
+  await expect(addComponent).toHaveClass(/scenario-suggested/); await addComponent.click();
+  await expect(page.getByRole('button', { name: /10 build, locked, You/ })).toBeVisible();
+  await page.getByRole('button', { name: '10 of Spades in your hand' }).click();
+  await page.getByRole('button', { name: /10 build, locked, You/ }).click();
+  await page.locator('.action-panel:visible').getByRole('button', { name: /^Capture 10 build/ }).click();
+  await expect(page.locator('.scenario-panel:visible').getByText(/complete multi-component BUILD 10/i)).toBeVisible();
   await page.getByRole('button', { name: 'Finish Demo' }).click();
   await expect(page.getByRole('button', { name: 'Play vs CPU' })).toBeVisible();
 });

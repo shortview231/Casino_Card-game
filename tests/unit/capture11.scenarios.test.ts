@@ -11,8 +11,8 @@ function expectedMove(id: typeof SCENARIO_IDS[number]) {
 }
 
 describe('Capture 11 reusable scenarios', () => {
-  it('loads six independent named states without sharing mutable collections', () => {
-    expect(SCENARIO_IDS).toHaveLength(6);
+  it('loads seven independent named states without sharing mutable collections', () => {
+    expect(SCENARIO_IDS).toHaveLength(7);
     for (const id of SCENARIO_IDS) {
       const first = loadScenario(id); const second = loadScenario(id);
       expect(first.id).toBe(id); expect(first.state.turn).toBe('player1');
@@ -90,5 +90,20 @@ describe('Capture 11 reusable scenarios', () => {
     expect(next.lastHandScore).not.toBeNull();
     expect(next.players.player1.matchScore).toBe(next.lastHandScore!.scores.player1.total);
     expect(next.players.player2.matchScore).toBe(next.lastHandScore!.scores.player2.total);
+  });
+
+  it('adds and captures Scene 7 as one multi-component build unit', () => {
+    const { scenario, next: extended } = expectedMove('multi_build_capture_demo');
+    const build = extended.board.find(item => item.kind === 'build');
+    expect(build?.kind).toBe('build');
+    if (build?.kind !== 'build') return;
+    expect(build.components).toHaveLength(2);
+    const capture = movesForExactSelection(extended, 'player1', scenario.suggestedHandCardId, [`build:${build.id}`])
+      .find(move => move.type === 'capture-build');
+    expect(capture).toBeDefined();
+    expect(isExpectedScenarioMove(capture!, scenario.expected)).toBe(true);
+    const complete = applyMove(extended, 'player1', capture!);
+    expect(complete.board.some(item => item.kind === 'build')).toBe(false);
+    expect(complete.players.player1.captured.map(card => card.id)).toEqual(expect.arrayContaining(['10-spades', '6-hearts', '4-clubs', '7-diamonds', '3-spades']));
   });
 });

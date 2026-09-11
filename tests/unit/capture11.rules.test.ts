@@ -6,6 +6,7 @@ import {
   canCaptureLooseSelection,
   canCreateOpenBuild,
   canCreatePairedBuild,
+  canAddBuildComponent,
   canExtendPairedBuild,
   canRaiseOpenBuild,
 } from '../../src/games/capture11/rules';
@@ -38,6 +39,20 @@ describe('Capture 11 loose captures', () => {
 });
 
 describe('Capture 11 builds', () => {
+  const multiBuild: NumericBuild = {
+    kind: 'build', id: 'multi-10', cards: [card('6', 'hearts'), card('4', 'clubs'), card('7', 'diamonds'), card('3', 'spades')],
+    components: [[card('6', 'hearts'), card('4', 'clubs')], [card('7', 'diamonds'), card('3', 'spades')]],
+    target: 10, mode: 'paired', createdBy: 'player1',
+  };
+
+  it('accepts independent same-value components and rejects unequal additions', () => {
+    expect(canAddBuildComponent(multiBuild, [loose('7', 'diamonds'), loose('3', 'spades')])).toBe(true);
+    expect(canAddBuildComponent(multiBuild, [loose('6', 'clubs'), loose('3', 'hearts')])).toBe(false);
+  });
+
+  it('supports a third valid component in one build', () => {
+    expect(canAddBuildComponent(multiBuild, [loose('8', 'clubs'), loose('2', 'hearts')])).toBe(true);
+  });
   it('allows A + 4 = 5 when a separate 5 remains in hand', () => {
     const playedAce = card('A', 'clubs');
     const boardFour = loose('4', 'hearts');

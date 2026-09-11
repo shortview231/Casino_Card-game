@@ -35,6 +35,7 @@ function actionLabel(move: Capture11Move, state: Capture11State): string {
   if (move.type === 'build-open') return `Build ${move.target}`;
   if (move.type === 'build-paired') return `Lock paired ${move.target}`;
   if (move.type === 'extend-paired') return `Add another ${move.target} group`;
+  if (move.type === 'extend-build') return `Add ${move.target} component`;
   return `Burn build → ${move.target}`;
 }
 

@@ -51,6 +51,8 @@ export interface NumericBuild {
   readonly kind: 'build';
   readonly id: string;
   readonly cards: readonly Card[];
+  /** Independent card groups; every group must add to target. Optional for legacy states. */
+  readonly components?: readonly (readonly Card[])[];
   readonly target: number;
   readonly mode: 'open' | 'paired';
   readonly createdBy: PlayerId;

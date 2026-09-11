@@ -404,6 +404,7 @@
 .capture11-build-state { padding: 0.2rem 0.4rem; border: 2px solid currentColor; font-size: 0.76rem; font-weight: 950; }
 .capture11-build-owner { justify-self: end; font-size: 0.78rem; font-weight: 850; }
 .capture11-build-cards { display: flex; align-items: flex-start; gap: 0.45rem; min-height: 6.4rem; overflow-x: auto; }
+.capture11-build-component-separator { align-self: center; color: var(--gold); font-size: 1.2rem; font-weight: 950; }
 .capture11 .capture11-build-card.lv-playing-card { width: 4.2rem; min-width: 4.2rem; height: 5.9rem; min-height: 5.9rem; pointer-events: none; }
 .capture11-build-count { font-size: 0.78rem; font-weight: 800; }
 .build-card.is-locked .capture11-build-state { background: #17212b; color: #fff; }

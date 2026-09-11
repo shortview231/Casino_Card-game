@@ -5,10 +5,12 @@ import {
   canCaptureBuild,
   canCaptureCombinedSelection,
   canCaptureLooseSelection,
+  canAddBuildComponent,
   canCreateOpenBuild,
   canCreatePairedBuild,
   canExtendPairedBuild,
   canRaiseOpenBuild,
+  partitionCardsIntoTargetGroups,
 } from './rules';
 import { scoreHand, type HandScoreResult } from './scoring';
 
@@ -30,6 +32,7 @@ export type Capture11Move =
   | { readonly type: 'build-open'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'build-paired'; readonly handCardId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'extend-paired'; readonly handCardId: string; readonly buildId: string; readonly cardIds: readonly string[]; readonly target: number }
+  | { readonly type: 'extend-build'; readonly handCardId: string; readonly buildId: string; readonly cardIds: readonly string[]; readonly target: number }
   | { readonly type: 'raise-build'; readonly handCardId: string; readonly buildId: string; readonly target: number };
 
 function copyPlayers(state: Capture11State) {
@@ -183,7 +186,8 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
   if (state.turn !== player) throw new Error('It is not that player’s turn');
 
   const played = getPlayedCard(state, player, move.handCardId);
-  const remainingHand = withoutHandCard(state.players[player].hand, played.id);
+  const isComponentExtension = move.type === 'extend-build';
+  const remainingHand = isComponentExtension ? [...state.players[player].hand] : withoutHandCard(state.players[player].hand, played.id);
   const players = copyPlayers(state);
   players[player] = { ...players[player], hand: remainingHand };
   let board = [...state.board];
@@ -244,6 +248,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
         kind: 'build',
         id: newBuildId,
         cards: [...selected.map((item) => item.card), played],
+        components: [[...selected.map((item) => item.card), played]],
         target: move.target,
         mode: 'open',
         createdBy: player,
@@ -260,6 +265,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
         kind: 'build',
         id: newBuildId,
         cards: [...selected.map((item) => item.card), played],
+        components: partitionCardsIntoTargetGroups([...selected.map((item) => item.card), played], move.target, 2) ?? [[...selected.map((item) => item.card), played]],
         target: move.target,
         mode: 'paired',
         createdBy: player,
@@ -276,10 +282,28 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       board.push({
         ...build,
         cards: [...build.cards, ...selected.map((item) => item.card), played],
+        components: [...(build.components ?? [build.cards]), [...selected.map((item) => item.card), played]],
         mode: 'paired',
         createdBy: player,
       });
       lastAction = `${player === 'player1' ? 'You add' : 'CPU adds'} another ${build.target} group to the locked build.`;
+      break;
+    }
+    case 'extend-build': {
+      const build = buildById(board, move.buildId);
+      const selected = looseByIds(board, move.cardIds);
+      if (played.id !== move.handCardId || numericBuildValue(played) !== build.target || !canAddBuildComponent(build, selected)) {
+        throw new Error('That build component is not legal');
+      }
+      const selectedIds = new Set(selected.map((item) => item.card.id));
+      board = board.filter((item) => item !== build && (item.kind !== 'loose' || !selectedIds.has(item.card.id)));
+      board.push({
+        ...build,
+        cards: [...build.cards, ...selected.map((item) => item.card)],
+        components: [...(build.components ?? [build.cards]), selected.map((item) => item.card)],
+        mode: 'paired',
+      });
+      lastAction = `${player === 'player1' ? 'You add' : 'CPU adds'} a complete ${build.target} component to BUILD ${build.target}.`;
       break;
     }
     case 'raise-build': {
@@ -289,6 +313,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
       board.push({
         ...build,
         cards: [...build.cards, played],
+        components: build.components ?? [build.cards],
         target: move.target,
         createdBy: player,
       });
@@ -302,7 +327,7 @@ export function applyMove(state: Capture11State, player: PlayerId, move: Capture
     board,
     players,
     lastCapturer,
-    turn: otherPlayer(player),
+    turn: isComponentExtension ? player : otherPlayer(player),
     lastAction,
   };
   next = redealIfNeeded(next);
@@ -467,6 +492,11 @@ export function legalMoves(state: Capture11State, player: PlayerId): Capture11Mo
           cardIds: selection.map((item) => item.card.id),
         });
       }
+      for (const selection of subsetsForSum(loose, build.target, 24)) {
+        if (canAddBuildComponent(build, selection) && value === build.target) {
+          moves.push({ type: 'extend-build', handCardId: played.id, buildId: build.id, cardIds: selection.map((item) => item.card.id), target: build.target });
+        }
+      }
       const raisedTarget = build.target + value;
       if (canRaiseOpenBuild(played, build, remaining, raisedTarget)) {
         moves.push({ type: 'raise-build', handCardId: played.id, buildId: build.id, target: raisedTarget });
@@ -553,6 +583,9 @@ export function movesForExactSelection(
   }
   if (buildIds.length !== 1) return uniqueMoves(moves);
   const build = selectedBuilds[0]!;
+  if (playedValueForCard(played) === build.target && selectedLoose.length > 0 && canAddBuildComponent(build, selectedLoose)) {
+    moves.push({ type: 'extend-build', handCardId, buildId: build.id, cardIds: looseIds, target: build.target });
+  }
   if (selectedLoose.length === 0 && canCaptureBuild(played, build)) {
     moves.push({ type: 'capture-build', handCardId, buildId: build.id });
   }
@@ -567,4 +600,8 @@ export function movesForExactSelection(
     moves.push({ type: 'extend-paired', handCardId, buildId: build.id, cardIds: looseIds, target: build.target });
   }
   return uniqueMoves(moves);
+}
+
+function playedValueForCard(card: Card): number | null {
+  return numericBuildValue(card);
 }

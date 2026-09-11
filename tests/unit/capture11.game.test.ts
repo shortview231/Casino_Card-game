@@ -298,4 +298,61 @@ describe('Capture 11 match flow', () => {
     expect(next.board).toHaveLength(0);
     expect(next.players.player1.captured).toHaveLength(5);
   });
+
+  it('adds two valid components to one build, then captures the entire unit', () => {
+    const ten = card('10', 'spades');
+    const six = card('6', 'hearts'); const four = card('4', 'clubs');
+    const seven = card('7', 'diamonds'); const three = card('3', 'spades');
+    const build: Extract<Capture11State['board'][number], { kind: 'build' }> = {
+      kind: 'build', id: 'multi-10', cards: [six, four], components: [[six, four]], target: 10, mode: 'open', createdBy: 'player1',
+    };
+    const state: Capture11State = {
+      ...buildScenario(), board: [build, { kind: 'loose', card: seven }, { kind: 'loose', card: three }],
+      players: { player1: { id: 'player1', hand: [ten], captured: [], matchScore: 0 }, player2: buildScenario().players.player2 },
+    };
+    const extend = movesForExactSelection(state, 'player1', ten.id, [`build:${build.id}`, `loose:${seven.id}`, `loose:${three.id}`])
+      .find((move) => move.type === 'extend-build');
+    expect(extend).toBeDefined();
+    const extended = applyMove(state, 'player1', extend!);
+    const extendedBuild = extended.board.find((item) => item.kind === 'build');
+    expect(extendedBuild?.kind).toBe('build');
+    if (extendedBuild?.kind === 'build') {
+      expect(extendedBuild.components).toHaveLength(2);
+      expect(extendedBuild.cards).toHaveLength(4);
+    }
+    const capture = movesForExactSelection(extended, 'player1', ten.id, [`build:${build.id}`]).find((move) => move.type === 'capture-build');
+    expect(capture).toBeDefined();
+    const next = applyMove(extended, 'player1', capture!);
+    expect(next.board).toHaveLength(0);
+    expect(next.players.player1.captured.map((captured) => captured.id)).toEqual(expect.arrayContaining([ten.id, six.id, four.id, seven.id, three.id]));
+  });
+
+  it('keeps three independent components together', () => {
+    const ten = card('10', 'spades'); const six = card('6', 'hearts'); const four = card('4', 'clubs');
+    const seven = card('7', 'diamonds'); const three = card('3', 'spades'); const eight = card('8', 'clubs'); const two = card('2', 'hearts');
+    const build: Extract<Capture11State['board'][number], { kind: 'build' }> = { kind: 'build', id: 'triple-10', cards: [six, four], components: [[six, four]], target: 10, mode: 'open', createdBy: 'player1' };
+    const state: Capture11State = { ...buildScenario(), board: [build, { kind: 'loose', card: seven }, { kind: 'loose', card: three }, { kind: 'loose', card: eight }, { kind: 'loose', card: two }], players: { player1: { id: 'player1', hand: [ten], captured: [], matchScore: 0 }, player2: buildScenario().players.player2 } };
+    const first = movesForExactSelection(state, 'player1', ten.id, [`build:${build.id}`, `loose:${seven.id}`, `loose:${three.id}`]).find(move => move.type === 'extend-build');
+    expect(first).toBeDefined();
+    const afterFirst = applyMove(state, 'player1', first!);
+    const secondBuild = afterFirst.board.find(item => item.kind === 'build');
+    expect(secondBuild?.kind).toBe('build');
+    if (secondBuild?.kind !== 'build') return;
+    const second = movesForExactSelection(afterFirst, 'player1', ten.id, [`build:${secondBuild.id}`, `loose:${eight.id}`, `loose:${two.id}`]).find(move => move.type === 'extend-build');
+    expect(second).toBeDefined();
+    const complete = applyMove(afterFirst, 'player1', second!);
+    const finalBuild = complete.board.find(item => item.kind === 'build');
+    expect(finalBuild?.kind).toBe('build');
+    if (finalBuild?.kind === 'build') expect(finalBuild.components).toHaveLength(3);
+  });
+
+  it('preserves takeover and raise behavior for ordinary builds', () => {
+    const state = buildScenario();
+    const build = legalMoves(state, 'player1').find((move) => move.type === 'build-open' && move.target === 5);
+    const afterBuild = applyMove(state, 'player1', build!);
+    const raise = legalMoves(afterBuild, 'player2').find((move) => move.type === 'raise-build' && move.target === 8);
+    expect(raise).toBeDefined();
+    const afterRaise = applyMove(afterBuild, 'player2', raise!);
+    expect(afterRaise.board.some((item) => item.kind === 'build' && item.target === 8 && item.createdBy === 'player2')).toBe(true);
+  });
 });
