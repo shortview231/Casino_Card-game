@@ -71,6 +71,28 @@ describe('Capture 11 multi-group loose captures', () => {
     ).toBe(false);
   });
 
+  it('rejects a divisible total when no complete groups exist', () => {
+    expect(canCaptureLooseSelection(card('8', 'spades'), [
+      loose(card('6', 'hearts')), loose(card('6', 'clubs')), loose(card('4', 'diamonds')),
+    ])).toBe(false);
+  });
+
+  it('offers and applies a loose 8 plus 3 + 5 through exact selection', () => {
+    const original = stateForMultiGroupCapture();
+    const selected = [card('8', 'hearts'), card('3', 'clubs'), card('5', 'diamonds')];
+    const state = { ...original, board: [...selected.map(loose), loose(card('K', 'clubs'))] };
+    const played = state.players.player1.hand[0]!;
+    const move = movesForExactSelection(state, 'player1', played.id,
+      selected.map(card => `loose:${card.id}`)).find(move => move.type === 'capture-loose');
+    expect(move).toBeDefined();
+    const next = applyMove(state, 'player1', move!);
+    expect(next.players.player1.captured.map(card => card.id).sort()).toEqual(
+      [played, ...selected].map(card => card.id).sort(),
+    );
+    expect(next.board).toEqual([loose(card('K', 'clubs'))]);
+    expect(next.turn).toBe('player2');
+  });
+
   it('offers and applies the exact two-8 capture through the same selection path used by the UI', () => {
     const state = stateForMultiGroupCapture();
     const playedEight = state.players.player1.hand[0]!;

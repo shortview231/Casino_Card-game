@@ -158,7 +158,7 @@ On 2026-09-08 Robert tested the redeployed game on his cell phone, could scroll 
 
 ## BUG-004 — Matching played rank captures only one of multiple loose matching cards
 
-- **Status:** OPEN — REPORTED, DO NOT AUTO-FIX
+- **Status:** FIXED IN CODE — PENDING LIVE ITCH.IO RECHECK
 - **Found:** 2026-09-08
 - **Environment:** live itch.io HTML5 build on Robert's phone
 - **Reporter:** Robert Sory
@@ -186,3 +186,13 @@ The engine/UI only allows one matching loose `8` to be selected/captured with th
 ### Investigation note
 
 Track this separately from BUG-002 until proven otherwise. It may share the same underlying multi-group capture logic, but this failure involves multiple independent same-value loose cards rather than a locked build plus an arithmetic loose-card group.
+
+### Verification — 2026-09-10
+
+- Preserved the existing numeric partition implementation: every selected loose card must belong to a complete group equal to the played value. No scoring, dealing, UI, or CPU strategy edits were needed.
+- Six focused unit regressions pass, including two loose 8s, loose 8 plus 3 + 5, both exact-selection/application paths, incomplete groups, and a divisible but impossible partition (6 + 6 + 4 for a played 8).
+- New real-opening-deal Chromium regressions select and capture both required examples through normal Play vs CPU on desktop and Pixel 7. They verify captured counts, selected-card removal, turn advancement, and page width containment.
+- Full `npm run verify:core` passed: manifest validation, typecheck, 58 tests with coverage, 2 stress tests, and production build. The configured coverage percentages cover engine/critterFlip, not Capture 11 rules.
+- Full browser suite passed: 26 tests, including BUG-001, BUG-002, menu, keyboard, accessibility, preferences, phone scrolling, 150% text, landscape, and coarse-pointer host coverage. Local Chromium used `/usr/bin/chromium-browser` on preview port 4173.
+- Inspected actual desktop and phone capture-ready screenshots. Existing desktop cockpit and phone action reachability remain intact. Port 8765 was untouched; guided demo remains planning only.
+- Robert's live itch.io recheck is still required before closing BUG-004.
