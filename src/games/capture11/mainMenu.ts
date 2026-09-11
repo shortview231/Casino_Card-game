@@ -177,7 +177,7 @@ export function renderCapture11MainMenu(root: HTMLElement, actions: GameTitleAct
     const visionCopy = document.createElement('div');
     visionCopy.append(text('strong', 'Designed for everyone to play'), text('p', 'Large, clear cards and a high-contrast interface.'));
     vision.append(visionCopy);
-    rail.append(brand, nav, difficultyWrap, vision);
+    rail.append(brand, difficultyWrap, nav, vision);
 
     const stage = document.createElement('main');
     stage.className = 'c11-menu-stage';
