@@ -1,13 +1,7 @@
 name: Microgame CI
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - microgame-engine-v0.1-runtime
-      - capture-11
-      - critter-flip
+  workflow_dispatch:
 
 permissions:
   contents: read
