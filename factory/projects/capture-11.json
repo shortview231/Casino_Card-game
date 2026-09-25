@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.1",
+  "project": {
+    "id": "MICRO-CAPTURE-11",
+    "title": "Capture 11",
+    "medium": "microgame",
+    "status": "BUILDING",
+    "owner": "Product Engine",
+    "source_project": "Casino_Card-game/capture-11"
+  },
+  "commercial": {
+    "price_hypothesis_usd": 1.99,
+    "price_approved": false,
+    "revenue_status": "NONE",
+    "pricing_basis": [
+      "First release is intended to be a small polished classic-style card microgame.",
+      "Existing repo hypothesis is $1.99-$2.99 one-time; $1.99 remains the initial launch test hypothesis.",
+      "Final price remains HUMAN_REVIEW/HUMAN_ACTION before release."
+    ]
+  },
+  "provenance": {
+    "classification": "MIXED",
+    "rights_status": "IN_PROGRESS",
+    "notes": [
+      "Rules are being rebuilt from the family's long-played version captured directly from the product owner.",
+      "The preserved Python Casino-era implementation is reference material, not authoritative where it conflicts with the family rules contract.",
+      "Final commercial art, audio and fonts must be original or commercially licensed and registered before RC."
+    ]
+  },
+  "platforms": [
+    {
+      "id": "itch.io",
+      "role": "PRIMARY",
+      "status": "PLANNED",
+      "policy_checked_on": "2026-08-29",
+      "release_refresh_required": true,
+      "notes": [
+        "Browser-first or lightweight desktop release remains the zero-upfront-cost distribution hypothesis.",
+        "Final policy, payment route and fees require release-window refresh."
+      ]
+    }
+  ],
+  "stages": [
+    {"id":"S00","name":"Discovery Intake","state":"PASS","control":"AUTO_ALLOWED","blocking":true,"evidence":["Existing family card game selected as first Capture 11 product candidate and first card-game reference implementation."],"blockers":[],"next_action":null},
+    {"id":"S01","name":"Hostile Market / Legal / Distribution Research","state":"IN_PROGRESS","control":"AUTO_ALLOWED","blocking":true,"evidence":["Original branding requirement established; zero-upfront-cost release lane identified."],"blockers":["Release-window market/distribution refresh not complete."],"next_action":"Refresh commercial lane after playable CPU build exists."},
+    {"id":"S02","name":"Commercial / Attention Hypothesis","state":"PASS","control":"HUMAN_REVIEW","blocking":true,"evidence":["Positioning centers on fast two-player risk, stealing, burns, builds, final-board control and first-to-11 scoring rather than an educational math-game pitch."],"blockers":[],"next_action":"Validate hook with external playtesters after first playable."},
+    {"id":"S03","name":"Rights / Provenance","state":"IN_PROGRESS","control":"HUMAN_REVIEW","blocking":true,"evidence":["Family rules provenance documented.","Commercial-safe original presentation required."],"blockers":["Final shipped asset register does not yet exist."],"next_action":"Register final art/audio/font provenance before RC."},
+    {"id":"S04","name":"Specification Lock","state":"IN_PROGRESS","control":"HUMAN_REVIEW","blocking":true,"evidence":["Capture 11 Family Rules Contract v0.1 exists.","Scoring, dealer rotation, face-rank behavior, build examples, final-board sweep and 26-26 tie are encoded in tests."],"blockers":["Several rare/compound move cases remain explicitly unresolved in the rules contract."],"next_action":"Resolve each remaining rule through concrete scenario tests before declaring spec lock."},
+    {"id":"S05","name":"Story Capture Plan","state":"PASS","control":"AUTO_ALLOWED","blocking":false,"evidence":["Product history and family-play origin are captured for future About/marketing use without making unsupported claims."],"blockers":[],"next_action":"Capture playable milestones and real playtest reactions."},
+    {"id":"S06","name":"Pricing / Unit Economics","state":"IN_PROGRESS","control":"HUMAN_REVIEW","blocking":true,"evidence":["$1.99 initial launch-test hypothesis retained."],"blockers":["Final price not human-approved."],"next_action":"Re-evaluate $1.99 vs $2.99 after CPU and private-PvP scope is known."},
+    {"id":"S07","name":"Production","state":"IN_PROGRESS","control":"AUTO_ALLOWED","blocking":true,"evidence":["Dedicated capture-11-rebuild-v0.1 branch created from reusable TypeScript/Vite microgame runtime.","Domain model, deck/deal flow, scoring, final sweep and core legality helpers committed."],"blockers":["Full turn reducer, legal move enumeration, CPU, playable UI and audio/presentation are incomplete."],"next_action":"Complete authoritative turn/state engine before polishing presentation."},
+    {"id":"S08","name":"Automated Verification","state":"IN_PROGRESS","control":"AUTO_ALLOWED","blocking":true,"evidence":["Capture 11 unit suites added under existing Vitest/CI infrastructure."],"blockers":["Current rebuild CI must complete green after latest commits.","Game-specific stress/property tests are not yet complete."],"next_action":"Keep PR CI green while expanding the rules engine."},
+    {"id":"S09","name":"Human QA","state":"BLOCKED","control":"HUMAN_ACTION","blocking":true,"evidence":[],"blockers":["No complete CPU match is playable yet."],"next_action":"Human QA begins after first complete CPU match path exists."},
+    {"id":"S10","name":"Derivative Map","state":"IN_PROGRESS","control":"HUMAN_REVIEW","blocking":false,"evidence":["Potential marketing clips include large-build steals, burns, risky point-card plays and final-board sweeps."],"blockers":[],"next_action":"Capture real gameplay clips after visual build exists."},
+    {"id":"S11","name":"Platform Packaging","state":"NOT_STARTED","control":"AUTO_ALLOWED","blocking":true,"evidence":[],"blockers":["Playable production build not locked."],"next_action":"Prepare store package after CPU build and QA."},
+    {"id":"S12","name":"Compliance Refresh","state":"NOT_STARTED","control":"AUTO_ALLOWED","blocking":true,"evidence":["Planning policy baseline checked 2026-08-29."],"blockers":["Final release policy refresh required within release window."],"next_action":"Refresh applicable store policies before RC."},
+    {"id":"S13","name":"Release Candidate Verification","state":"BLOCKED","control":"AUTO_ALLOWED","blocking":true,"evidence":[],"blockers":["Specification, production, provenance, QA, packaging and compliance gates are incomplete."],"next_action":"Generate RC only after predecessor gates pass."},
+    {"id":"S14","name":"Human Release Approval","state":"BLOCKED","control":"HUMAN_ACTION","blocking":true,"evidence":[],"blockers":["RC_VERIFIED not achieved."],"next_action":"Human approves exact release candidate and price."},
+    {"id":"S15","name":"Deployment / Publication","state":"BLOCKED","control":"HUMAN_ACTION","blocking":true,"evidence":[],"blockers":["Human release approval absent."],"next_action":"Publish only after explicit approval."},
+    {"id":"S16","name":"Post-Deploy Verification","state":"NOT_STARTED","control":"AUTO_ALLOWED","blocking":true,"evidence":[],"blockers":["Product is not deployed."],"next_action":"Verify public build, purchase path, price and critical play path immediately after deployment."},
+    {"id":"S17","name":"Live Learning","state":"NOT_STARTED","control":"AUTO_ALLOWED","blocking":false,"evidence":[],"blockers":["Post-deploy verification has not passed."],"next_action":"Track plays, purchases, rematches, support and PvP demand after launch."}
+  ]
+}

@@ -1,5 +1,6 @@
 import type {
   AccessibilityPreferences,
+  CpuDifficulty,
   GameModule,
   GameResult,
   MountedGame,
@@ -17,12 +18,14 @@ export class MicrogameRuntime {
   private mounted: MountedGame | null = null;
   private result: GameResult | null = null;
   private prefs: AccessibilityPreferences;
+  private difficulty: CpuDifficulty;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly game: GameModule,
   ) {
     this.prefs = loadJson('engine', 'preferences', DEFAULT_PREFS);
+    this.difficulty = loadJson('capture-11', 'cpuDifficulty', 'medium' as CpuDifficulty);
     this.applyPreferences();
   }
 
@@ -46,6 +49,17 @@ export class MicrogameRuntime {
 
   private showTitle(): void {
     this.clear();
+
+    if (this.game.renderTitle) {
+      this.game.renderTitle(this.root, {
+        play: (difficulty = this.difficulty) => { this.difficulty = difficulty; saveJson('capture-11', 'cpuDifficulty', difficulty); this.showGame(); },
+        loadDifficulty: () => this.difficulty,
+        guidedDemo: () => this.showGame('guided-demo'),
+      settings: () => this.showSettings(),
+      });
+      return;
+    }
+
     const section = document.createElement('section');
     section.className = 'screen';
 
@@ -111,7 +125,7 @@ export class MicrogameRuntime {
     this.root.append(section);
   }
 
-  private showGame(): void {
+  private showGame(mode: 'normal' | 'guided-demo' = 'normal'): void {
     this.clear();
     this.result = null;
     const gameHost = document.createElement('section');
@@ -129,6 +143,9 @@ export class MicrogameRuntime {
         this.result = result;
         this.showResults();
       },
+      exitToTitle: () => this.showTitle(),
+      mode,
+      difficulty: this.difficulty,
     });
   }
 
